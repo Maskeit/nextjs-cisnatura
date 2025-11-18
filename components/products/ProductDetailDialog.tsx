@@ -31,8 +31,8 @@ export default function ProductDetailDialog({
   const isOutOfStock = product.stock === 0;
 
   const imageUrl = product.image_url
-    ? `${process.env.NEXT_PUBLIC_API_URL}/static/products/${product.image_url}`
-    : '/placeholder-product.jpg';
+    ? `${process.env.NEXT_PUBLIC_API_URL}${product.image_url}`
+    : '/placeholder.png';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Products } from "@/components/products/Products"
 import { Button } from "@/components/ui/button"
-import { Filter } from "lucide-react"
+import { Filter, X } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -11,14 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-// TODO: Obtener categorías desde la API
-const CATEGORIES = [
-  { id: 0, name: 'Todas las categorías' },
-  { id: 1, name: 'aceites-esenciales' },
-  { id: 2, name: 'cuidado-piel' },
-  { id: 3, name: 'aromaterapia' },
-];
+import ProductController from '@/lib/ProductController'
+import { Category } from '@/interfaces/Products'
+import { toast } from "sonner"
 
 const PRICE_RANGES = [
   { id: 'all', label: 'Todos los precios' },
@@ -29,8 +25,31 @@ const PRICE_RANGES = [
 ];
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const response = await ProductController.getCategories({ limit: 100 });
+      setCategories(response.data.categories);
+    } catch (error) {
+      console.error('Error al cargar categorías:', error);
+      toast.error('Error al cargar las categorías');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   const handleCategoryChange = (categoryId: string) => {
     const id = categoryId === '0' ? undefined : parseInt(categoryId);
@@ -51,7 +70,9 @@ export default function Home() {
       {/* Título de sección */}
       <div className="w-full py-6">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Cisnatura / <span className="font-normal">Todos los productos</span>
+          Cisnatura / <span className="font-normal">
+            {searchQuery ? `Resultados para "${searchQuery}"` : 'Todos los productos'}
+          </span>
         </h1>
       </div>
 
@@ -66,12 +87,14 @@ export default function Home() {
         <Select
           value={selectedCategory?.toString() || '0'}
           onValueChange={handleCategoryChange}
+          disabled={isLoadingCategories}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Categoría" />
+            <SelectValue placeholder={isLoadingCategories ? "Cargando..." : "Categoría"} />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((category) => (
+            <SelectItem value="0">Todas las categorías</SelectItem>
+            {categories.map((category) => (
               <SelectItem key={category.id} value={category.id.toString()}>
                 {category.name}
               </SelectItem>
@@ -108,6 +131,7 @@ export default function Home() {
       <Products 
         selectedCategory={selectedCategory}
         selectedPriceRange={selectedPriceRange}
+        searchQuery={searchQuery}
         onCategoryChange={setSelectedCategory}
         onPriceRangeChange={setSelectedPriceRange}
         onClearFilters={clearFilters}

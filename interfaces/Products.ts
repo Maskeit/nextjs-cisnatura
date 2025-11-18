@@ -31,6 +31,13 @@ export interface ProductsResponse {
     };
 }
 
+export interface ProductResponse {
+    success: boolean;
+    status_code: number;
+    message: string;
+    data: Product;
+}
+
 // ==================== AUTH ====================
 export interface AuthHeaders {
   Authorization: string; // "Bearer {token}"
@@ -157,6 +164,78 @@ export interface ApiError {
   status_code: number;
   message: string;
   error: AdminErrorCode;
+}
+
+// ==================== CATEGORIES ====================
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  image_url: string | null;
+  created_at: string | null;
+  is_active?: boolean;
+}
+
+export interface CategoryListResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    categories: Category[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      total_pages: number;
+      has_next: boolean;
+      has_prev: boolean;
+    };
+  };
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+  slug: string;
+  description?: string | null;
+  image_url?: string | null;
+}
+
+export interface UpdateCategoryRequest {
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  image_url?: string | null;
+  is_active?: boolean;
+}
+
+export interface CategoryResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    image_url: string | null;
+    is_active: boolean;
+    created_at: string | null;
+  };
+}
+
+// ==================== UPLOADS ====================
+
+export interface UploadImageResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    file_url: string;
+    file_name: string;
+    file_size: number;
+  };
 }
 
 // ==================== API WRAPPER ====================

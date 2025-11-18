@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ProductCard from './ProductCard';
+import ProductCard from '@/components/admin/products/ProductCard';
 import { Product } from '@/interfaces/Products';
 import ProductController from '@/lib/ProductController';
 import {
@@ -17,7 +17,6 @@ import {
 interface ProductsProps {
   selectedCategory?: number;
   selectedPriceRange?: string;
-  searchQuery?: string;
   onCategoryChange: (categoryId: number | undefined) => void;
   onPriceRangeChange: (rangeId: string) => void;
   onClearFilters: () => void;
@@ -26,7 +25,6 @@ interface ProductsProps {
 export const Products = ({
   selectedCategory,
   selectedPriceRange = 'all',
-  searchQuery = '',
 }: ProductsProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,13 +52,12 @@ export const Products = ({
         maxPrice = undefined;
       }
       
-      const response = await ProductController.fetchProducts({
+      const response = await ProductController.adminListAll({
         page,
         limit: 20,
         category_id: selectedCategory,
         min_price: minPrice,
         max_price: maxPrice,
-        search: searchQuery || undefined,
       });
       
       setProducts(response.data.products);
@@ -74,11 +71,11 @@ export const Products = ({
 
   useEffect(() => {
     fetchProducts(currentPage);
-  }, [currentPage, selectedCategory, selectedPriceRange, searchQuery]);
+  }, [currentPage, selectedCategory, selectedPriceRange]);
 
-  useEffect(() => {
+  const handleProductUpdated = () => {
     fetchProducts(currentPage);
-  }, [currentPage, selectedCategory, selectedPriceRange, searchQuery]);
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -138,7 +135,11 @@ export const Products = ({
       {/* Grid de productos - 5 columnas en desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard 
+            key={product.id} 
+            product={product}
+            onProductUpdated={handleProductUpdated}
+          />
         ))}
       </div>
 

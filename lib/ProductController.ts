@@ -1,13 +1,20 @@
 import { api } from "@/lib/api";
 import { 
-  ProductsResponse, 
+  ProductsResponse,
+  ProductResponse,
   AdminListProductsParams,
   AdminListProductsResponse,
   CreateProductRequest,
   CreateProductResponse,
   UpdateProductRequest,
   UpdateProductResponse,
-  DeleteProductResponse
+  DeleteProductResponse,
+  CategoryListResponse,
+  Category,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+  CategoryResponse,
+  UploadImageResponse
 } from "@/interfaces/Products";
 
 interface ProductFilters {
@@ -105,6 +112,26 @@ class ProductController {
     return this.fetchProducts({ min_price: minPrice, max_price: maxPrice, page, limit });
   };
 
+  /**
+   * Obtener un producto por ID
+   * @param productId - ID del producto
+   * @returns Promise con el producto
+   */
+  static getProductById = async (productId: number): Promise<ProductResponse> => {
+    const response = await api.get(`/products/${productId}`);
+    return response.data;
+  };
+
+  /**
+   * Obtener un producto por slug
+   * @param slug - Slug del producto
+   * @returns Promise con el producto
+   */
+  static getProductBySlug = async (slug: string): Promise<ProductResponse> => {
+    const response = await api.get(`/products/slug/${slug}`);
+    return response.data;
+  };
+
   // ==================== ADMIN METHODS ====================
 
   /**
@@ -158,6 +185,97 @@ class ProductController {
    */
   static adminDelete = async (productId: number): Promise<DeleteProductResponse> => {
     const response = await api.delete(`/products/${productId}`);
+    return response.data;
+  };
+
+  // ==================== CATEGORY METHODS ====================
+
+  /**
+   * Listar todas las categorías activas
+   * @param params - Parámetros de paginación y búsqueda
+   * @returns Promise con la lista de categorías
+   */
+  static getCategories = async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<CategoryListResponse> => {
+    const queryParams: Record<string, string | number> = {};
+    
+    if (params?.page !== undefined) queryParams.page = params.page;
+    if (params?.limit !== undefined) queryParams.limit = params.limit;
+    if (params?.search) queryParams.search = params.search.trim();
+
+    const response = await api.get("/products/categories", { params: queryParams });
+    return response.data;
+  };
+
+  /**
+   * Obtener una categoría por ID
+   * @param categoryId - ID de la categoría
+   * @returns Promise con los datos de la categoría
+   */
+  static getCategoryById = async (categoryId: number): Promise<CategoryResponse> => {
+    const response = await api.get(`/products/categories/${categoryId}`);
+    return response.data;
+  };
+
+  /**
+   * Crear una nueva categoría (admin)
+   * @param data - Datos de la categoría a crear
+   * @returns Promise con la categoría creada
+   */
+  static createCategory = async (data: CreateCategoryRequest): Promise<CategoryResponse> => {
+    const response = await api.post("/products/categories", data);
+    return response.data;
+  };
+
+  /**
+   * Actualizar una categoría existente (admin)
+   * @param categoryId - ID de la categoría a actualizar
+   * @param data - Datos a actualizar
+   * @returns Promise con la categoría actualizada
+   */
+  static updateCategory = async (
+    categoryId: number,
+    data: UpdateCategoryRequest
+  ): Promise<CategoryResponse> => {
+    const response = await api.put(`/products/categories/${categoryId}`, data);
+    return response.data;
+  };
+
+  /**
+   * Eliminar una categoría (admin) - soft delete
+   * @param categoryId - ID de la categoría a eliminar
+   * @returns Promise con la respuesta de eliminación
+   */
+  static deleteCategory = async (categoryId: number): Promise<CategoryResponse> => {
+    const response = await api.delete(`/products/categories/${categoryId}`);
+    return response.data;
+  };
+
+  // ==================== UPLOAD METHODS ====================
+
+  /**
+   * Subir imagen de producto (admin)
+   * @param file - Archivo de imagen a subir
+   * @param onUploadProgress - Callback para el progreso de subida
+   * @returns Promise con la URL de la imagen subida
+   */
+  static uploadProductImage = async (
+    file: File,
+    onUploadProgress?: (progressEvent: any) => void
+  ): Promise<UploadImageResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post('/uploads/products', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress,
+    });
+    
     return response.data;
   };
 }

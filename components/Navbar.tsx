@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -13,7 +12,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from '@/components/ModeToggle';
-import { Search, ShoppingCart, UserCircle, Menu, LogOut, User } from 'lucide-react';
+import SearchBar from '@/components/SearchBar';
+import { ShoppingCart, UserCircle, Menu, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
@@ -109,22 +109,10 @@ export default function Navbar() {
 
                     {/* Barra de búsqueda (desktop) */}
                     <div className="hidden md:flex flex-1 w-2xl">
-                        <form className="relative w-full" role="search">
-                            <Input
-                                type="search"
-                                placeholder="Buscar productos, cursos, categorías..."
-                                className="w-full h-12 pl-4 pr-14 text-base bg-white border-0 shadow-lg focus-visible:ring-2 focus-visible:ring-white/0"
-                                aria-label="Buscar en el sitio"
-                            />
-                            <Button
-                                type="submit"
-                                size="icon"
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-light h-9 w-9"
-                                aria-label="Buscar"
-                            >
-                                <Search className="h-5 w-5" />
-                            </Button>
-                        </form>
+                        <SearchBar
+                            placeholder="Buscar productos, cursos, categorías..."
+                            inputClassName="h-12 text-base bg-white border-0 shadow-lg focus-visible:ring-2 focus-visible:ring-white/0"
+                        />
                     </div>
 
                     {/* Iconos de navegación (desktop) */}
@@ -192,22 +180,11 @@ export default function Navbar() {
 
                 {/* Barra de búsqueda móvil */}
                 <div className="md:hidden pb-5">
-                    <form className="relative w-full" role="search">
-                        <Input
-                            type="search"
-                            placeholder="Buscar productos..."
-                            className="w-full h-11 pl-4 pr-12 bg-white border-0 shadow-md"
-                            aria-label="Buscar en el sitio"
-                        />
-                        <Button
-                            type="submit"
-                            size="icon"
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-light h-8 w-8"
-                            aria-label="Buscar"
-                        >
-                            <Search className="h-4 w-4" />
-                        </Button>
-                    </form>
+                    <SearchBar
+                        placeholder="Buscar productos..."
+                        inputClassName="h-11 bg-white border-0 shadow-md"
+                        isMobile
+                    />
                 </div>
             </nav>
         </header>
