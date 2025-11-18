@@ -1,15 +1,20 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Product } from '@/interfaces/Products';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
+import ProductDetailDialog from './ProductDetailDialog';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const formattedPrice = new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',
@@ -17,33 +22,43 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const isOutOfStock = product.stock === 0;
 
-  return (
-    <Card className="group overflow-hidden transition-all hover:shadow-lg">
-      {/* Imagen del producto */}
-      <Link href={`/productos/${product.slug}`} className="block relative aspect-square overflow-hidden">
-        <Image
-          src={product.image_url || '/placeholder-product.jpg'}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform group-hover:scale-105"
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-        />
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-destructive text-white px-4 py-2 rounded-lg font-semibold">
-              Agotado
-            </span>
-          </div>
-        )}
-      </Link>
+  // Construir URL completa de la imagen
+  const imageUrl = product.image_url 
+    ? `${process.env.NEXT_PUBLIC_API_URL}/static/products/${product.image_url}`
+    : '/placeholder-product.jpg';
 
-      <CardContent className="pt-4">
-        {/* Nombre del producto */}
-        <Link href={`/productos/${product.slug}`}>
-          <h3 className="font-semibold text-lg line-clamp-2 hover:text-primary transition-colors mb-2">
-            {product.name}
-          </h3>
-        </Link>
+  return (
+    <>
+      <Card className="group overflow-hidden transition-all hover:shadow-lg cursor-pointer">
+        {/* Imagen del producto */}
+        <div 
+          onClick={() => setIsDialogOpen(true)}
+          className="block relative aspect-square overflow-hidden"
+        >
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform group-hover:scale-105"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            unoptimized
+          />
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="bg-destructive text-white px-4 py-2 rounded-lg font-semibold">
+                Agotado
+              </span>
+            </div>
+          )}
+        </div>
+
+        <CardContent className="pt-4">
+          {/* Nombre del producto */}
+          <div onClick={() => setIsDialogOpen(true)}>
+            <h3 className="font-semibold text-lg line-clamp-2 hover:text-primary transition-colors mb-2">
+              {product.name}
+            </h3>
+          </div>
 
         {/* Descripción (opcional) */}
         {product.description && (
@@ -84,5 +99,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Button>
       </CardFooter>
     </Card>
+
+    <ProductDetailDialog
+      product={product}
+      open={isDialogOpen}
+      onOpenChange={setIsDialogOpen}
+    />
+    </>
   );
 }

@@ -1,5 +1,14 @@
 import { api } from "@/lib/api";
-import { ProductsResponse } from "@/interfaces/Products";
+import { 
+  ProductsResponse, 
+  AdminListProductsParams,
+  AdminListProductsResponse,
+  CreateProductRequest,
+  CreateProductResponse,
+  UpdateProductRequest,
+  UpdateProductResponse,
+  DeleteProductResponse
+} from "@/interfaces/Products";
 
 interface ProductFilters {
   page?: number;
@@ -94,6 +103,62 @@ class ProductController {
     limit: number = 20
   ): Promise<ProductsResponse> => {
     return this.fetchProducts({ min_price: minPrice, max_price: maxPrice, page, limit });
+  };
+
+  // ==================== ADMIN METHODS ====================
+
+  /**
+   * Listar todos los productos (admin) - incluye productos inactivos
+   * @param params - Parámetros de filtrado y paginación
+   * @returns Promise con la respuesta de productos de admin
+   */
+  static adminListAll = async (params: AdminListProductsParams = {}): Promise<AdminListProductsResponse> => {
+    const queryParams: Record<string, string | number | boolean> = {};
+
+    if (params.page !== undefined) queryParams.page = params.page;
+    if (params.limit !== undefined) queryParams.limit = params.limit;
+    if (params.category_id !== undefined) queryParams.category_id = params.category_id;
+    if (params.search) queryParams.search = params.search.trim();
+    if (params.min_price !== undefined) queryParams.min_price = params.min_price;
+    if (params.max_price !== undefined) queryParams.max_price = params.max_price;
+    if (params.is_active !== undefined) queryParams.is_active = params.is_active;
+
+    const response = await api.get("/products/admin/all", { params: queryParams });
+    return response.data;
+  };
+
+  /**
+   * Crear un nuevo producto (admin)
+   * @param data - Datos del producto a crear
+   * @returns Promise con la respuesta del producto creado
+   */
+  static adminCreate = async (data: CreateProductRequest): Promise<CreateProductResponse> => {
+    const response = await api.post("/products", data);
+    return response.data;
+  };
+
+  /**
+   * Actualizar un producto existente (admin)
+   * @param productId - ID del producto a actualizar
+   * @param data - Datos a actualizar
+   * @returns Promise con la respuesta del producto actualizado
+   */
+  static adminUpdate = async (
+    productId: number, 
+    data: UpdateProductRequest
+  ): Promise<UpdateProductResponse> => {
+    const response = await api.put(`/products/${productId}`, data);
+    return response.data;
+  };
+
+  /**
+   * Eliminar un producto (admin) - soft delete
+   * @param productId - ID del producto a eliminar
+   * @returns Promise con la respuesta de eliminación
+   */
+  static adminDelete = async (productId: number): Promise<DeleteProductResponse> => {
+    const response = await api.delete(`/products/${productId}`);
+    return response.data;
   };
 }
 

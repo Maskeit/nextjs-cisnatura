@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
@@ -8,15 +10,17 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
-    DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from '@/components/ModeToggle';
-import { Search, ShoppingCart, UserCircle, Menu } from 'lucide-react';
+import { Search, ShoppingCart, UserCircle, Menu, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
+    const { user, isAuthenticated, logout, isLoading } = useAuth();
+    
     return (
-        <header className="w-full flex justify-center bg-white z-50 shadow-md">
+        <header className="w-full flex justify-center bg-white dark:bg-muted/30 z-50 shadow-md">
             <nav className="max-w-[1440px] w-full py-4" aria-label="Navegación principal">
                 <div className="flex flex-col md:flex-row md:mx-auto md:items-center gap-3 md:gap-6 px-4 lg:px-0">
                     {/* Fila superior en móvil: Logo y acciones */}
@@ -46,28 +50,49 @@ export default function Navbar() {
                         {/* Iconos de navegación (móvil) */}
                         <div className="flex items-center gap-2 md:hidden">
                             {/* Perfil */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-white hover:bg-white/10 hover:text-white">
-                                        <UserCircle className="w-8 h-8 text-gray-500" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56" align="end">
-                                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                                    <DropdownMenuItem>
-                                        Profile
-                                        <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                        Log out
-                                        <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            {!isLoading && (isAuthenticated ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-white hover:bg-white/10 hover:text-white">
+                                            <UserCircle className="w-8 h-8 text-gray-500" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-56" align="end">
+                                        <DropdownMenuLabel>
+                                            {user?.full_name || 'Mi Cuenta'}
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/perfil" className="flex items-center cursor-pointer">
+                                                <User className="mr-2 h-4 w-4" />
+                                                Perfil
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        {user?.is_admin && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/admin/productos" className="flex items-center cursor-pointer">
+                                                    <User className="mr-2 h-4 w-4" />
+                                                    Panel Admin
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            Cerrar Sesión
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-primary">
+                                    <Link href="/login">
+                                        Iniciar Sesión
+                                    </Link>
+                                </Button>
+                            ))}
 
                             {/* Carrito */}
                             <Button
@@ -108,28 +133,49 @@ export default function Navbar() {
                         <ModeToggle />
                         
                         {/* Perfil */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-white hover:bg-white/10 hover:text-white">
-                                    <UserCircle className="w-10 h-10 text-gray-500" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end">
-                                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                                <DropdownMenuItem>
-                                    Profile
-                                    <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    Log out
-                                    <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {!isLoading && (isAuthenticated ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-white hover:bg-white/10 hover:text-white">
+                                        <UserCircle className="w-10 h-10 text-gray-500" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56" align="end">
+                                    <DropdownMenuLabel>
+                                        {user?.full_name || 'Mi Cuenta'}
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <Link href="/perfil" className="flex items-center cursor-pointer">
+                                            <User className="mr-2 h-4 w-4" />
+                                            Perfil
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    {user?.is_admin && (
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/admin/productos" className="flex items-center cursor-pointer">
+                                                <User className="mr-2 h-4 w-4" />
+                                                Panel Admin
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Cerrar Sesión
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Button asChild variant="ghost" className="text-gray-600 hover:text-primary">
+                                <Link href="/login">
+                                    Iniciar Sesión
+                                </Link>
+                            </Button>
+                        ))}
 
                         {/* Carrito */}
                         <Button

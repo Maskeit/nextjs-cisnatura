@@ -4,15 +4,6 @@ import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/interfaces/Products';
 import ProductController from '@/lib/ProductController';
-import { Button } from '@/components/ui/button';
-import { Filter } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Pagination,
   PaginationContent,
@@ -23,43 +14,50 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-// TODO: Obtener categorías desde la API
-const CATEGORIES = [
-  { id: 0, name: 'Todas las categorías' },
-  { id: 1, name: 'aceites-esenciales' },
-  { id: 2, name: 'cuidado-piel' },
-  { id: 3, name: 'aromaterapia' },
-];
+interface ProductsProps {
+  selectedCategory?: number;
+  selectedPriceRange?: string;
+  onCategoryChange: (categoryId: number | undefined) => void;
+  onPriceRangeChange: (rangeId: string) => void;
+  onClearFilters: () => void;
+}
 
-const PRICE_RANGES = [
-  { id: 'all', label: 'Todos los precios', min: undefined, max: undefined },
-  { id: '0-100', label: 'Menos de $100', min: 0, max: 100 },
-  { id: '100-300', label: '$100 - $300', min: 100, max: 300 },
-  { id: '300-500', label: '$300 - $500', min: 300, max: 500 },
-  { id: '500+', label: 'Más de $500', min: 500, max: undefined },
-];
-
-export const Products = () => {
+export const Products = ({
+  selectedCategory,
+  selectedPriceRange = 'all',
+}: ProductsProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Filtros
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
-  const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all');
 
   const fetchProducts = async (page: number) => {
     setIsLoading(true);
     try {
-      const priceRange = PRICE_RANGES.find(range => range.id === selectedPriceRange);
+      // Obtener min/max del rango de precios
+      let minPrice: number | undefined;
+      let maxPrice: number | undefined;
+      
+      if (selectedPriceRange === '0-100') {
+        minPrice = 0;
+        maxPrice = 100;
+      } else if (selectedPriceRange === '100-300') {
+        minPrice = 100;
+        maxPrice = 300;
+      } else if (selectedPriceRange === '300-500') {
+        minPrice = 300;
+        maxPrice = 500;
+      } else if (selectedPriceRange === '500+') {
+        minPrice = 500;
+        maxPrice = undefined;
+      }
       
       const response = await ProductController.fetchProducts({
         page,
         limit: 20,
         category_id: selectedCategory,
-        min_price: priceRange?.min,
-        max_price: priceRange?.max,
+        min_price: minPrice,
+        max_price: maxPrice,
       });
       
       setProducts(response.data.products);
@@ -74,23 +72,6 @@ export const Products = () => {
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, selectedCategory, selectedPriceRange]);
-
-  const handleCategoryChange = (categoryId: string) => {
-    const id = categoryId === '0' ? undefined : parseInt(categoryId);
-    setSelectedCategory(id);
-    setCurrentPage(1);
-  };
-
-  const handlePriceRangeChange = (rangeId: string) => {
-    setSelectedPriceRange(rangeId);
-    setCurrentPage(1);
-  };
-
-  const clearFilters = () => {
-    setSelectedCategory(undefined);
-    setSelectedPriceRange('all');
-    setCurrentPage(1);
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -147,61 +128,6 @@ export const Products = () => {
 
   return (
     <div className="space-y-6">
-      {/* Barra de filtros */}
-      <div className="flex flex-wrap items-center gap-3 pb-4 border-b">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Filter className="h-4 w-4" />
-          <span className="font-medium">Filtrar por:</span>
-        </div>
-
-        {/* Filtro por Categoría */}
-        <Select
-          value={selectedCategory?.toString() || '0'}
-          onValueChange={handleCategoryChange}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORIES.map((category) => (
-              <SelectItem key={category.id} value={category.id.toString()}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Filtro por Precio */}
-        <Select
-          value={selectedPriceRange}
-          onValueChange={handlePriceRangeChange}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Precio" />
-          </SelectTrigger>
-          <SelectContent>
-            {PRICE_RANGES.map((range) => (
-              <SelectItem key={range.id} value={range.id}>
-                {range.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Botón limpiar filtros */}
-        {(selectedCategory !== undefined || selectedPriceRange !== 'all') && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Limpiar filtros
-          </Button>
-        )}
-
-        <div className="ml-auto text-sm text-muted-foreground">
-          {!isLoading && products.length > 0 && (
-            <span>{products.length} productos encontrados</span>
-          )}
-        </div>
-      </div>
-
       {/* Grid de productos - 5 columnas en desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {products.map((product) => (
