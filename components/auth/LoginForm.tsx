@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 
 const formSchema = z.object({
     email: z.string().email({
@@ -33,6 +34,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -43,6 +45,19 @@ export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps
 
     return (
         <div className="w-full max-w-md space-y-8 px-4">
+            {/* Back button */}
+            <div className="flex justify-start">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push('/')}
+                    disabled={isLoading}
+                    className="-ml-2"
+                >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver al inicio
+                </Button>
+            </div>
             {/* Logo */}
             <div className="flex flex-col items-center space-y-4">
                 <div className="rounded-lg flex items-center justify-center">

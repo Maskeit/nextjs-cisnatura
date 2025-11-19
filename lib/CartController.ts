@@ -37,25 +37,25 @@ class CartController {
 
   /**
    * Actualizar la cantidad de un item en el carrito
-   * @param itemId - ID del item en el carrito
+   * @param productId - ID del producto en el carrito
    * @param data - Nueva cantidad
    * @returns Promise con el carrito actualizado
    */
   static updateItem = async (
-    itemId: number,
+    productId: number,
     data: UpdateCartItemRequest
   ): Promise<CartResponse> => {
-    const response = await api.put(`/cart/items/${itemId}`, data);
+    const response = await api.put(`/cart/items/${productId}`, data);
     return response.data;
   };
 
   /**
    * Eliminar un item del carrito
-   * @param itemId - ID del item a eliminar
+   * @param productId - ID del producto a eliminar
    * @returns Promise con el carrito actualizado
    */
-  static removeItem = async (itemId: number): Promise<CartResponse> => {
-    const response = await api.delete(`/cart/items/${itemId}`);
+  static removeItem = async (productId: number): Promise<CartResponse> => {
+    const response = await api.delete(`/cart/items/${productId}`);
     return response.data;
   };
 
@@ -70,35 +70,35 @@ class CartController {
 
   /**
    * Incrementar la cantidad de un item en 1
-   * @param itemId - ID del item
+   * @param productId - ID del producto
    * @param currentQuantity - Cantidad actual
    * @returns Promise con el carrito actualizado
    */
   static incrementItem = async (
-    itemId: number,
+    productId: number,
     currentQuantity: number
   ): Promise<CartResponse> => {
-    return this.updateItem(itemId, { quantity: currentQuantity + 1 });
+    return this.updateItem(productId, { quantity: currentQuantity + 1 });
   };
 
   /**
    * Decrementar la cantidad de un item en 1
-   * @param itemId - ID del item
+   * @param productId - ID del producto
    * @param currentQuantity - Cantidad actual
    * @returns Promise con el carrito actualizado
    */
   static decrementItem = async (
-    itemId: number,
+    productId: number,
     currentQuantity: number
   ): Promise<CartResponse> => {
     const newQuantity = currentQuantity - 1;
     
     // Si la cantidad llega a 0, eliminar el item
     if (newQuantity <= 0) {
-      return this.removeItem(itemId);
+      return this.removeItem(productId);
     }
     
-    return this.updateItem(itemId, { quantity: newQuantity });
+    return this.updateItem(productId, { quantity: newQuantity });
   };
 }
 

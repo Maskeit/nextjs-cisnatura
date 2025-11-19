@@ -70,20 +70,28 @@ export interface ValidationErrorDetail {
     input: any;
 }
 
-export interface ValidationErrorResponse {
-    success: false;
-    status_code: 400;
-    message: string;
-    error: "VALIDATION_ERROR";
-    details: ValidationErrorDetail[];
-}
-
-export interface AuthErrorResponse {
+// Estructura base de error (lo que viene dentro de detail)
+export interface BaseErrorResponse {
     success: false;
     status_code: number;
     message: string;
     error: string;
 }
 
+export interface ValidationErrorResponse extends BaseErrorResponse {
+    status_code: 400;
+    error: "VALIDATION_ERROR";
+    details: ValidationErrorDetail[];
+}
+
+export interface AuthErrorResponse extends BaseErrorResponse {
+    error: "AUTHENTICATION_REQUIRED" | "UNAUTHORIZED" | "FORBIDDEN" | "TOKEN_EXPIRED" | "TOKEN_REVOKED" | "INVALID_CREDENTIALS";
+}
+
+// Estructura completa de error de la API (con wrapper detail)
+export interface ApiErrorResponseWrapper {
+    detail: ValidationErrorResponse | AuthErrorResponse | BaseErrorResponse;
+}
+
 // Union type para manejar respuestas de error
-export type ApiErrorResponse = ValidationErrorResponse | AuthErrorResponse;
+export type ApiErrorResponse = ValidationErrorResponse | AuthErrorResponse | BaseErrorResponse;

@@ -156,6 +156,7 @@ export type AdminErrorCode =
   | "DUPLICATE_SLUG"
   | "VALIDATION_ERROR"
   | "UNAUTHORIZED"
+  | "AUTHENTICATION_REQUIRED"
   | "TOKEN_EXPIRED"
   | "TOKEN_REVOKED";
 
@@ -164,6 +165,11 @@ export interface ApiError {
   status_code: number;
   message: string;
   error: AdminErrorCode;
+}
+
+// Estructura con wrapper detail (como viene de la API)
+export interface ApiErrorWrapper {
+  detail: ApiError;
 }
 
 // ==================== CATEGORIES ====================

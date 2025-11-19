@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/interfaces/Products';
 import ProductController from '@/lib/ProductController';
+import CartController from '@/lib/CartController';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ export default function ProductPage() {
   
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -46,8 +48,38 @@ export default function ProductPage() {
     }
   };
 
-  const handleAddToCart = () => {
-    toast.success(`${quantity} ${quantity === 1 ? 'unidad agregada' : 'unidades agregadas'} al carrito`);
+  const handleAddToCart = async () => {
+    if (!product) return;
+    
+    setIsAddingToCart(true);
+    try {
+      const response = await CartController.addItem({
+        product_id: product.id,
+        quantity: quantity,
+      });
+      
+      if (response.success) {
+        toast.success(`${quantity} ${quantity === 1 ? 'unidad agregada' : 'unidades agregadas'} al carrito`);
+        // Disparar evento para actualizar el contador del navbar
+        window.dispatchEvent(new Event('cartUpdated'));
+        // Resetear cantidad
+        setQuantity(1);
+      }
+    } catch (error: any) {
+      console.error('Error al agregar al carrito:', error);
+      
+      // Si es 401, redirigir a login
+      if (error.response?.status === 401) {
+        toast.error('Debes iniciar sesión para agregar productos al carrito');
+        router.push('/login');
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Error al agregar el producto al carrito');
+      }
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -202,12 +234,16 @@ export default function ProductPage() {
           <div className="pt-4">
             <Button
               size="lg"
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || isAddingToCart}
               onClick={handleAddToCart}
               className="w-full h-16 text-xl"
             >
-              <ShoppingCart className="h-6 w-6 mr-3" />
-              {isOutOfStock ? 'No disponible' : 'Agregar al carrito'}
+              {isAddingToCart ? (
+                <Loader2 className="h-6 w-6 mr-3 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-6 w-6 mr-3" />
+              )}
+              {isOutOfStock ? 'No disponible' : isAddingToCart ? 'Agregando...' : 'Agregar al carrito'}
             </Button>
           </div>
 

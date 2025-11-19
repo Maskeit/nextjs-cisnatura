@@ -53,18 +53,8 @@ export default function LoginPage() {
       
       let errorMessage = 'Error al iniciar sesión. Por favor intenta de nuevo.';
       
-      // La API devuelve los errores en err.response.data.detail
-      if (err.response?.data?.detail) {
-        const errorDetail = err.response.data.detail;
-        
-        // Si detail es un objeto con el formato de tu API
-        if (errorDetail.message) {
-          errorMessage = errorDetail.message;
-        } else if (typeof errorDetail === 'string') {
-          errorMessage = errorDetail;
-        }
-      } else if (err.response?.data?.message) {
-        // Fallback por si la estructura cambia
+      // El interceptor ya extrajo el detail, ahora err.response.data tiene la estructura correcta
+      if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.status === 401) {
         errorMessage = 'Correo electrónico o contraseña incorrectos';

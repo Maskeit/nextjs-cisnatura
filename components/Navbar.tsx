@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -15,9 +16,56 @@ import { ModeToggle } from '@/components/ModeToggle';
 import SearchBar from '@/components/SearchBar';
 import { ShoppingCart, UserCircle, Menu, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import CartController from '@/lib/CartController';
+import { Badge } from '@/components/ui/badge';
+
+function SearchBarFallback({ isMobile = false }: { isMobile?: boolean }) {
+    return (
+        <div className={`w-full ${isMobile ? 'h-11' : 'h-12'} bg-muted animate-pulse rounded-md`} />
+    );
+}
 
 export default function Navbar() {
     const { user, isAuthenticated, logout, isLoading } = useAuth();
+    const [cartItemCount, setCartItemCount] = useState<number>(0);
+
+    // Función para actualizar el contador del carrito
+    const updateCartCount = async () => {
+        if (!isAuthenticated || isLoading) {
+            setCartItemCount(0);
+            return;
+        }
+        
+        try {
+            const response = await CartController.getSummary();
+            if (response.success) {
+                setCartItemCount(response.data.total_items);
+            }
+        } catch (error: any) {
+            // Si hay error (por ejemplo 401 o AUTHENTICATION_REQUIRED), simplemente no mostrar contador
+            // No mostrar toast aquí para evitar spam de mensajes
+            if (error.response?.status === 401 || error.response?.data?.error === 'AUTHENTICATION_REQUIRED') {
+                setCartItemCount(0);
+            }
+        }
+    };
+
+    // Cargar el contador al montar y cuando cambie la autenticación
+    useEffect(() => {
+        updateCartCount();
+    }, [isAuthenticated]);
+
+    // Escuchar eventos de actualización del carrito
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        
+        const handleCartUpdate = () => {
+            updateCartCount();
+        };
+
+        window.addEventListener('cartUpdated', handleCartUpdate);
+        return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    }, [isAuthenticated]);
     
     return (
         <header className="w-full flex justify-center bg-white dark:bg-muted/30 z-50 shadow-md">
@@ -102,6 +150,14 @@ export default function Navbar() {
                                 className="relative text-white hover:bg-white/10 hover:text-white">
                                 <Link href="/carrito" aria-label="Ver carrito de compras">
                                     <ShoppingCart className="w-6 h-6 text-gray-500" />
+                                    {cartItemCount > 0 && (
+                                        <Badge 
+                                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                                            variant="destructive"
+                                        >
+                                            {cartItemCount > 99 ? '99+' : cartItemCount}
+                                        </Badge>
+                                    )}
                                 </Link>
                             </Button>
                         </div>
@@ -109,10 +165,12 @@ export default function Navbar() {
 
                     {/* Barra de búsqueda (desktop) */}
                     <div className="hidden md:flex flex-1 w-2xl">
-                        <SearchBar
-                            placeholder="Buscar productos, cursos, categorías..."
-                            inputClassName="h-12 text-base bg-white border-0 shadow-lg focus-visible:ring-2 focus-visible:ring-white/0"
-                        />
+                        <Suspense fallback={<SearchBarFallback />}>
+                            <SearchBar
+                                placeholder="Buscar productos, cursos, categorías..."
+                                inputClassName="h-12 text-base bg-white border-0 shadow-lg focus-visible:ring-2 focus-visible:ring-white/0"
+                            />
+                        </Suspense>
                     </div>
 
                     {/* Iconos de navegación (desktop) */}
@@ -173,6 +231,14 @@ export default function Navbar() {
                             className="relative text-white hover:bg-white/10 hover:text-white h-11 w-11">
                             <Link href="/carrito" aria-label="Ver carrito de compras">
                                 <ShoppingCart className="w-6 h-6 text-gray-500" />
+                                {cartItemCount > 0 && (
+                                    <Badge 
+                                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                                        variant="destructive"
+                                    >
+                                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                                    </Badge>
+                                )}
                             </Link>
                         </Button>
                     </div>
@@ -180,11 +246,13 @@ export default function Navbar() {
 
                 {/* Barra de búsqueda móvil */}
                 <div className="md:hidden pb-5">
-                    <SearchBar
-                        placeholder="Buscar productos..."
-                        inputClassName="h-11 bg-white border-0 shadow-md"
-                        isMobile
-                    />
+                    <Suspense fallback={<SearchBarFallback isMobile />}>
+                        <SearchBar
+                            placeholder="Buscar productos..."
+                            inputClassName="h-11 bg-white border-0 shadow-md"
+                            isMobile
+                        />
+                    </Suspense>
                 </div>
             </nav>
         </header>

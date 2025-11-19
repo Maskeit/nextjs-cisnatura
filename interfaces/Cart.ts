@@ -71,6 +71,7 @@ export type CartErrorCode =
   | "INSUFFICIENT_STOCK"
   | "INVALID_QUANTITY"
   | "UNAUTHORIZED"
+  | "AUTHENTICATION_REQUIRED"
   | "VALIDATION_ERROR";
 
 export interface CartApiError {
@@ -78,4 +79,9 @@ export interface CartApiError {
   status_code: number;
   message: string;
   error: CartErrorCode;
+}
+
+// Estructura con wrapper detail (como viene de la API)
+export interface CartApiErrorWrapper {
+  detail: CartApiError;
 }

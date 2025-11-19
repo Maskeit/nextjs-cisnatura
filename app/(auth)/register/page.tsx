@@ -47,7 +47,7 @@ export default function RegisterPage() {
       
       let errorMessage = 'Error al crear la cuenta. Por favor intenta de nuevo.';
       
-      // Manejar respuestas de error estructuradas
+      // El interceptor ya extrajo el detail, ahora err.response.data tiene la estructura correcta
       if (err.response?.data) {
         const errorData = err.response.data;
         
@@ -64,15 +64,6 @@ export default function RegisterPage() {
         // Error estructurado (EMAIL_ALREADY_EXISTS, etc)
         else if (errorData.message) {
           errorMessage = errorData.message;
-        }
-        // Fallback para errores en detail
-        else if (errorData.detail) {
-          const errorDetail = errorData.detail;
-          if (typeof errorDetail === 'object' && errorDetail.message) {
-            errorMessage = errorDetail.message;
-          } else if (typeof errorDetail === 'string') {
-            errorMessage = errorDetail;
-          }
         }
       } else if (!err.response) {
         errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
