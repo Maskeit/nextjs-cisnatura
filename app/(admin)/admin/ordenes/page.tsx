@@ -6,7 +6,7 @@ export default function AdminOrdenesPage() {
   return (
     <div className="py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Gestión de Órdenes</h1>
+        <h1 className="text-3xl font-bold text-zinc-500">Gestión de Órdenes</h1>
         <p className="text-muted-foreground mt-2">
           Administra y da seguimiento a todas las órdenes de la tienda
         </p>

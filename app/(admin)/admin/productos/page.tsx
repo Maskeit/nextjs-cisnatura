@@ -148,8 +148,8 @@ export default function AdminProductosPage() {
     <div className="py-8">
       {/* Título de sección */}
       <div className="w-full py-6 flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Cisnatura / <span className="font-normal">Todos los productos</span>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-500">
+          CISnatura / <span className="font-normal">Todos los productos</span>
         </h1>
         <Button onClick={() => setIsCreateProductOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

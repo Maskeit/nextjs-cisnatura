@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 
 const formSchema = z.object({
     full_name: z.string().min(2, {
@@ -25,11 +26,11 @@ const formSchema = z.object({
     email: z.string().email({
         message: "Por favor ingresa un correo electrónico válido.",
     }),
-    password: z.string().min(6, {
-        message: "La contraseña debe tener al menos 6 caracteres.",
+    password: z.string().min(8, {
+        message: "La contraseña debe tener al menos 8 caracteres.",
     }),
-    confirm_password: z.string().min(6, {
-        message: "La contraseña debe tener al menos 6 caracteres.",
+    confirm_password: z.string().min(8, {
+        message: "La contraseña debe tener al menos 8 caracteres.",
     }),
 }).refine((data) => data.password === data.confirm_password, {
     message: "Las contraseñas no coinciden",
@@ -44,6 +45,8 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFormProps) {
     const router = useRouter();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -142,13 +145,28 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
                             <FormItem>
                                 <FormLabel className="text-base">Contraseña</FormLabel>
                                 <FormControl>
-                                    <Input 
-                                        type="password" 
-                                        placeholder="••••••••" 
-                                        className="h-12 text-base"
-                                        disabled={isLoading}
-                                        {...field} 
-                                    />
+                                    <div className="relative">
+                                        <Input 
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••" 
+                                            className="h-12 text-base pr-10"
+                                            disabled={isLoading}
+                                            {...field} 
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            disabled={isLoading}
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-5 w-5" />
+                                            ) : (
+                                                <Eye className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -162,13 +180,28 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
                             <FormItem>
                                 <FormLabel className="text-base">Confirmar contraseña</FormLabel>
                                 <FormControl>
-                                    <Input 
-                                        type="password" 
-                                        placeholder="••••••••" 
-                                        className="h-12 text-base"
-                                        disabled={isLoading}
-                                        {...field} 
-                                    />
+                                    <div className="relative">
+                                        <Input 
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            placeholder="••••••••" 
+                                            className="h-12 text-base pr-10"
+                                            disabled={isLoading}
+                                            {...field} 
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            disabled={isLoading}
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? (
+                                                <EyeOff className="h-5 w-5" />
+                                            ) : (
+                                                <Eye className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

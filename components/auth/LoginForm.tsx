@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 
 const formSchema = z.object({
     email: z.string().email({
@@ -35,6 +36,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
     const router = useRouter();
+    const [showPassword, setShowPassword] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -111,13 +113,28 @@ export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps
                             <FormItem>
                                 <FormLabel className="text-base">Contraseña</FormLabel>
                                 <FormControl>
-                                    <Input 
-                                        type="password" 
-                                        placeholder="••••••••" 
-                                        className="h-12 text-base"
-                                        disabled={isLoading}
-                                        {...field} 
-                                    />
+                                    <div className="relative">
+                                        <Input 
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••" 
+                                            className="h-12 text-base pr-10"
+                                            disabled={isLoading}
+                                            {...field} 
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            disabled={isLoading}
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-5 w-5" />
+                                            ) : (
+                                                <Eye className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
