@@ -69,8 +69,8 @@ export default function HomeContent() {
     <div className="flex flex-col min-h-screen px-6 pt-8">
       {/* Título de sección */}
       <div className="w-full py-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Cisnatura / <span className="font-normal">
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-400">
+          CISnatura / <span className="font-normal">
             {searchQuery ? `Resultados para "${searchQuery}"` : 'Todos los productos'}
           </span>
         </h1>

@@ -69,7 +69,7 @@ export default function Navbar() {
     
     return (
         <header className="w-full flex justify-center bg-white dark:bg-muted/30 z-50 shadow-md">
-            <nav className="max-w-[1440px] w-full py-4" aria-label="Navegación principal">
+            <nav className="max-w-[1440px] w-full py-4 px-6" aria-label="Navegación principal">
                 <div className="flex flex-col md:flex-row md:mx-auto md:items-center gap-3 md:gap-6 px-4 lg:px-0">
                     {/* Fila superior en móvil: Logo y acciones */}
                     <div className="flex items-center justify-between w-full md:w-auto">
