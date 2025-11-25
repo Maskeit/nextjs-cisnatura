@@ -13,7 +13,7 @@ class AddressController {
    * @returns Promise con la lista de direcciones, total y límite máximo
    */
   static getAddresses = async (): Promise<AddressListResponse> => {
-    const response = await api.get("/addresses");
+    const response = await api.get("/addresses/");
     return response.data;
   };
 
@@ -37,7 +37,7 @@ class AddressController {
   static createAddress = async (
     data: CreateAddressRequest
   ): Promise<AddressResponse> => {
-    const response = await api.post("/addresses", data);
+    const response = await api.post("/addresses/", data);
     return response.data;
   };
 

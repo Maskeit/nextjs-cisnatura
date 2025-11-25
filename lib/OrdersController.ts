@@ -27,7 +27,7 @@ import {
 export const createOrder = async (
   data: CreateOrderRequest
 ): Promise<Order> => {
-  const response = await api.post<OrderResponse>("/orders", data);
+  const response = await api.post<OrderResponse>("/orders/", data);
   return response.data.data;
 };
 
@@ -37,7 +37,7 @@ export const createOrder = async (
 export const getOrders = async (
   params?: GetOrdersParams
 ): Promise<OrderList> => {
-  const response = await api.get<OrderListResponse>("/orders", { params });
+  const response = await api.get<OrderListResponse>("/orders/", { params });
   return response.data.data;
 };
 
@@ -68,7 +68,7 @@ export const cancelOrder = async (orderId: number): Promise<Order> => {
 export const getAdminOrders = async (
   params?: GetAdminOrdersParams
 ): Promise<OrderListAdmin> => {
-  const response = await api.get<OrderListAdminResponse>("/admin/orders", {
+  const response = await api.get<OrderListAdminResponse>("/admin/orders/", {
     params,
   });
   return response.data.data;
