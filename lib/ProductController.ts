@@ -64,7 +64,7 @@ class ProductController {
       params.max_price = max_price;
     }
 
-    const response = await api.get("products", { params });
+    const response = await api.get("products/", { params });
     return response.data;
   };
 
