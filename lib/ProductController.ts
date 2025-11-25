@@ -160,7 +160,7 @@ class ProductController {
    * @returns Promise con la respuesta del producto creado
    */
   static adminCreate = async (data: CreateProductRequest): Promise<CreateProductResponse> => {
-    const response = await api.post("/products", data);
+    const response = await api.post("/products/", data);
     return response.data;
   };
 
