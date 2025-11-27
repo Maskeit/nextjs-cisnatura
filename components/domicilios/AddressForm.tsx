@@ -24,9 +24,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import estados from '@/lib/data/estados.json';
 import { Plus, Loader2 } from 'lucide-react';
 import AddressController from '@/lib/AddressController';
-import { Address } from '@/interfaces/Address';
+import { Address, Estado } from '@/interfaces/Address';
 import { toast } from 'sonner';
 
 const addressFormSchema = z.object({
@@ -54,6 +56,14 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [municipios, setMunicipios] = useState<string[]>([]);
+
+  const handleEstadoChange = (estadoNombre: string) => {
+    const estadoMunicipios = estados[estadoNombre as keyof typeof estados] || [];
+    setMunicipios(estadoMunicipios);
+  };
+
+
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
     defaultValues: editAddress ? {
@@ -65,7 +75,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
       city: editAddress.city,
       state: editAddress.state,
       postal_code: editAddress.postal_code,
-      country: editAddress.country,
+      country: 'México',
       is_default: editAddress.is_default,
     } : {
       full_name: '',
@@ -84,9 +94,12 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
   const onSubmit = async (data: AddressFormValues) => {
     setIsSubmitting(true);
     try {
+      // Asegurar que el país siempre sea México
+      const addressData = { ...data, country: 'México' };
+
       if (editAddress) {
         // Actualizar dirección existente
-        const response = await AddressController.updateAddress(editAddress.id, data);
+        const response = await AddressController.updateAddress(editAddress.id, addressData);
         if (response.success) {
           toast.success('Dirección actualizada correctamente');
           setOpen(false);
@@ -95,7 +108,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
         }
       } else {
         // Crear nueva dirección
-        const response = await AddressController.createAddress(data);
+        const response = await AddressController.createAddress(addressData);
         if (response.success) {
           toast.success('Dirección agregada correctamente');
           setOpen(false);
@@ -105,7 +118,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
       }
     } catch (error: any) {
       console.error('Error al guardar dirección:', error);
-      
+
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error.response?.status === 400) {
@@ -205,65 +218,85 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
             )}
           />
 
+          {/* ciudad y estado para edicion con campos seteados porque ya estan solo para modificar */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ciudad *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ciudad de México" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="state"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estado *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="CDMX" {...field} />
-                  </FormControl>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      handleEstadoChange(value);
+                      form.setValue('city', ''); // Limpiar ciudad al cambiar estado
+                    }}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un estado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.keys(estados).map((estadoNombre) => (
+                        <SelectItem key={estadoNombre} value={estadoNombre}>
+                          {estadoNombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Municipio *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                    disabled={!form.watch('state')}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un municipio" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {form.watch('state') && estados[form.watch('state') as keyof typeof estados]?.map((municipio: string) => (
+                        <SelectItem key={municipio} value={municipio}>
+                          {municipio}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="postal_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código Postal *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="01000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>País *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="México" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="postal_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código Postal *</FormLabel>
+                <FormControl>
+                  <Input placeholder="01000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
@@ -313,8 +346,8 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full"
           disabled={maxReached}
         >
@@ -417,62 +450,79 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ciudad *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ciudad de México" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="state"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="CDMX" {...field} />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleEstadoChange(value);
+                        form.setValue('city', ''); // Limpiar ciudad al cambiar estado
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.keys(estados).map((estadoNombre) => (
+                          <SelectItem key={estadoNombre} value={estadoNombre}>
+                            {estadoNombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Municipio *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!form.watch('state')}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un municipio" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {form.watch('state') && estados[form.watch('state') as keyof typeof estados]?.map((municipio: string) => (
+                          <SelectItem key={municipio} value={municipio}>
+                            {municipio}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="postal_code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código Postal *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="01000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>País *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="México" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="postal_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código Postal *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="01000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,8 @@ export default function Navbar() {
     const { user, isAuthenticated, logout, isLoading } = useAuth();
     const [cartItemCount, setCartItemCount] = useState<number>(0);
 
-    // Función para actualizar el contador del carrito
-    const updateCartCount = async () => {
+    // Función para actualizar el contador del carrito (memorizada con useCallback)
+    const updateCartCount = useCallback(async () => {
         if (!isAuthenticated || isLoading) {
             setCartItemCount(0);
             return;
@@ -39,6 +39,7 @@ export default function Navbar() {
         try {
             const response = await CartController.getSummary();
             if (response.success) {
+                console.log('Cart summary response:', response.data.total_items);
                 setCartItemCount(response.data.total_items);
             }
         } catch (error: any) {
@@ -48,24 +49,25 @@ export default function Navbar() {
                 setCartItemCount(0);
             }
         }
-    };
+    }, [isAuthenticated, isLoading]);
 
     // Cargar el contador al montar y cuando cambie la autenticación
     useEffect(() => {
         updateCartCount();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, isLoading]);
 
     // Escuchar eventos de actualización del carrito
     useEffect(() => {
         if (!isAuthenticated) return;
         
         const handleCartUpdate = () => {
+            console.log('Cart update event received in Navbar');
             updateCartCount();
         };
 
         window.addEventListener('cartUpdated', handleCartUpdate);
         return () => window.removeEventListener('cartUpdated', handleCartUpdate);
-    }, [isAuthenticated]);
+    }, [isAuthenticated, updateCartCount]);
     
     return (
         <header className="w-full flex justify-center bg-white dark:bg-muted/30 z-50 shadow-md">
@@ -74,14 +76,6 @@ export default function Navbar() {
                     {/* Fila superior en móvil: Logo y acciones */}
                     <div className="flex items-center justify-between w-full md:w-auto">
                         {/* Menú hamburguesa (mobile) */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="lg:hidden text-white hover:bg-white/10 hover:text-white"
-                            aria-label="Abrir menú"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </Button>
 
                         {/* Logo */}
                         <Link href="/" className="flex-shrink-0" aria-label="Ir a la página de inicio">
@@ -97,6 +91,9 @@ export default function Navbar() {
 
                         {/* Iconos de navegación (móvil) */}
                         <div className="flex items-center gap-2 md:hidden">
+                            {/* Toggle Theme */}
+                            <ModeToggle />
+                            
                             {/* Perfil */}
                             {!isLoading && (isAuthenticated ? (
                                 <DropdownMenu>

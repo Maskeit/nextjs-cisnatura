@@ -1,8 +1,9 @@
-"use client"
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OrdersController from '@/lib/OrdersController';
+import { formatDateTime } from '@/lib/dateUtils';
 import type { OrderSummary } from '@/interfaces/Orders';
 import { OrderStatus } from '@/interfaces/Orders';
 import {
@@ -184,13 +185,7 @@ export default function OrdersTable({ initialPage = 1, initialLimit = 10 }: Orde
                   >
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>
-                      {new Date(order.created_at).toLocaleDateString('es-MX', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDateTime(order.created_at)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={OrdersController.getOrderStatusColor(order.status)}>

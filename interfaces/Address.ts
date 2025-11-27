@@ -90,3 +90,13 @@ export interface AddressApiError {
 export interface AddressApiErrorWrapper {
   detail: AddressApiError;
 }
+
+// ==================== ESTADOS DATA ====================
+export interface Municipio {
+  nombre: string;
+}
+
+export interface Estado {
+  nombre: string;
+  municipio: Municipio[];
+}

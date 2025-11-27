@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import OrdersController from '@/lib/OrdersController';
+import { formatDateLong, formatTime } from '@/lib/dateUtils';
 import type { Order } from '@/interfaces/Orders';
 import { OrderStatus } from '@/interfaces/Orders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -224,17 +225,10 @@ export default function OrderDetailContent({ params }: OrderDetailContentProps) 
           </CardHeader>
           <CardContent>
             <div className="text-sm font-bold">
-              {new Date(order.created_at).toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {formatDateLong(order.created_at)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {new Date(order.created_at).toLocaleTimeString('es-MX', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatTime(order.created_at)}
             </p>
           </CardContent>
         </Card>

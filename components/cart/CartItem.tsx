@@ -49,6 +49,12 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   };
 
   const handleDecrement = async () => {
+    // Si la cantidad es 1, eliminar el producto en lugar de decrementar
+    if (item.quantity === 1) {
+      await handleRemove();
+      return;
+    }
+
     setIsUpdating(true);
     try {
       await onUpdate(item.product_id, item.quantity - 1);

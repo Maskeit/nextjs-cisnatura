@@ -40,7 +40,7 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-zinc-500">Contacto</h4>
             <p className="text-sm">
               Email: cisnatura.ventas@gmail.com<br />
-              Teléfono: (314) 123-4567
+              Teléfono: +52 314 352 8121
             </p>
           </div>
         </div>

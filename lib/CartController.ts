@@ -12,7 +12,7 @@ class CartController {
    * @returns Promise con el carrito y todos sus items
    */
   static getCart = async (): Promise<CartResponse> => {
-    const response = await api.get("/cart/");
+    const response = await api.get("/cart");
     return response.data;
   };
 

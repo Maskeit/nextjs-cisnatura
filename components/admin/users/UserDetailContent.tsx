@@ -1,8 +1,9 @@
 "use client"
 
-import { use, useEffect, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UserController from '@/lib/UserController';
+import { formatDate } from '@/lib/dateUtils';
 import type { UserAdminDetails } from '@/interfaces/User';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -265,11 +266,7 @@ export default function UserDetailContent({ params }: UserDetailContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-sm font-bold">
-              {new Date(userData.created_at).toLocaleDateString('es-MX', { 
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}
+              {formatDate(userData.created_at)}
             </div>
             <p className="text-xs text-muted-foreground">Fecha de registro</p>
           </CardContent>
@@ -456,11 +453,7 @@ export default function UserDetailContent({ params }: UserDetailContentProps) {
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>
-                      {new Date(order.created_at).toLocaleDateString('es-MX', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+                      {formatDate(order.created_at)}
                     </TableCell>
                     <TableCell className="capitalize">{order.status}</TableCell>
                     <TableCell className="text-right font-medium">

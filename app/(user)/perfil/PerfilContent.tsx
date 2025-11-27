@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import UserController from '@/lib/UserController';
@@ -29,8 +29,9 @@ export default function PerfilContent() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const [profileData, setProfileData] = useState<UserProfileSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
 
-  useEffect(() => {
+  useEffect(() => {    
     // Redirigir si no está autenticado
     if (!authLoading && !isAuthenticated) {
       toast.info('Inicia sesión para ver tu perfil');
@@ -38,7 +39,9 @@ export default function PerfilContent() {
       return;
     }
 
-    if (isAuthenticated) {
+    // Evitar llamada duplicada en desarrollo (Strict Mode)
+    if (isAuthenticated && !hasLoadedRef.current) {      
+      hasLoadedRef.current = true;
       loadProfileData();
     }
   }, [isAuthenticated, authLoading]);

@@ -158,7 +158,7 @@ export default function CarritoPage() {
         </Breadcrumb>
 
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold">
+          <h1 className="text-3xl md:text-4xl font-bold text-zinc-400">
             Carrito de Compras
           </h1>
           
@@ -200,7 +200,7 @@ export default function CarritoPage() {
           // Carrito vacío
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <ShoppingCart className="h-24 w-24 text-muted-foreground/50 mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Tu carrito está vacío</h2>
+            <h2 className="text-2xl font-semibold mb-2 text-zinc-400 dark:text-zinc-200">Tu carrito está vacío</h2>
             <p className="text-muted-foreground mb-6">
               Agrega productos para comenzar tu compra
             </p>

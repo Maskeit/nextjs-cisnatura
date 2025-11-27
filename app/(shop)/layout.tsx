@@ -17,7 +17,7 @@ export default function ShopLayout({
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <Navbar />
-      <main className="flex flex-col lg:max-w-[2000px] min-h-screen mx-auto px-8">
+      <main className="flex flex-col lg:max-w-[2000px] min-h-screen mx-auto px-2">
         {children}
       </main>
       <Toaster />
