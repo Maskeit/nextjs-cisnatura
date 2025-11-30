@@ -25,6 +25,12 @@ export const AuthAPI = {
         return response.data;
     },
 
+    // Login con Google (Firebase)
+    async loginWithGoogle(data: { firebase_token: string }): Promise<LoginResponse> {
+        const response = await api.post('/auth/google-login', data);
+        return response.data;
+    },
+
     async logout(): Promise<{ success: boolean; status_code: number; message: string }> {
         const response = await api.post('/auth/logout');
         return response.data;
