@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.cisnaturatienda.com',
         pathname: '/static/products/**',
       },
+      // Google User Profile Images
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/a/**',
+      },
     ],
     // Formatos modernos
     formats: ['image/avif', 'image/webp'],

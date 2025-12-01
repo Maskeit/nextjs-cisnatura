@@ -17,6 +17,8 @@ export interface UserResponse {
     is_admin: boolean;
     email_verified: boolean;
     email_verified_at: string | null;
+    auth_provider?: string;
+    profile_image?: string | null;
     created_at: string;
     updated_at: string | null;
 }
@@ -31,6 +33,7 @@ export interface LoginResponse {
         token_type: string;
         expires_in: number;
         user: UserResponse;
+        is_new_user?: boolean;
     };
 }
 

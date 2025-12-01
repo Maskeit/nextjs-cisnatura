@@ -39,7 +39,6 @@ export default function Navbar() {
         try {
             const response = await CartController.getSummary();
             if (response.success) {
-                console.log('Cart summary response:', response.data.total_items);
                 setCartItemCount(response.data.total_items);
             }
         } catch (error: any) {
@@ -61,7 +60,6 @@ export default function Navbar() {
         if (!isAuthenticated) return;
         
         const handleCartUpdate = () => {
-            console.log('Cart update event received in Navbar');
             updateCartCount();
         };
 
@@ -102,7 +100,18 @@ export default function Navbar() {
                                             variant="ghost"
                                             size="icon"
                                             className="text-white hover:bg-white/10 hover:text-white">
-                                            <UserCircle className="w-8 h-8 text-gray-500" />
+                                            {user?.profile_image ? (
+                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                                                    <img
+                                                        src={user.profile_image}
+                                                        alt={user.full_name || 'Usuario'}
+                                                        className="object-cover w-full h-full"
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <UserCircle className="w-8 h-8 text-gray-500" />
+                                            )}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end">
@@ -183,7 +192,18 @@ export default function Navbar() {
                                         variant="ghost"
                                         size="icon"
                                         className="text-white hover:bg-white/10 hover:text-white">
-                                        <UserCircle className="w-10 h-10 text-gray-500" />
+                                        {user?.profile_image ? (
+                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                                                <img
+                                                    src={user.profile_image}
+                                                    alt={user.full_name || 'Usuario'}
+                                                    className="object-cover w-full h-full"
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <UserCircle className="w-10 h-10 text-gray-500" />
+                                        )}
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56" align="end">

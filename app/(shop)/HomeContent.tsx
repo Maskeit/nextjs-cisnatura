@@ -26,12 +26,18 @@ const PRICE_RANGES = [
 
 export default function HomeContent() {
   const searchParams = useSearchParams();
-  const searchQuery = searchParams.get('q') || '';
-  
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  // Evitar hidratación mismatch
+  useEffect(() => {
+    setMounted(true);
+    setSearchQuery(searchParams.get('q') || '');
+  }, [searchParams]);
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -64,6 +70,11 @@ export default function HomeContent() {
     setSelectedCategory(undefined);
     setSelectedPriceRange('all');
   };
+
+  // Prevenir render hasta que el componente esté montado en el cliente
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col min-h-screen px-6 pt-8">

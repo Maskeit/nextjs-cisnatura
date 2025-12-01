@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider";
+import { SessionProvider } from "@/components/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Cisnatura - Autenticación",
@@ -14,10 +15,12 @@ export default function AuthLayout({
 }>) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <div className="min-h-screen flex flex-col">
-        {children}
-      </div>
-      <Toaster />
+      <SessionProvider>
+        <div className="min-h-screen flex flex-col">
+          {children}
+        </div>
+        <Toaster />
+      </SessionProvider>
     </ThemeProvider>
   );
 }
