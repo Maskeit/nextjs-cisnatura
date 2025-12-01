@@ -81,7 +81,7 @@ export function SeasonalOffers({ settings, onUpdate }: SeasonalOffersProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.createSeasonalOffer({
+      await AdminConfigController.createSeasonalOffer({
         name,
         start_date: startDate,
         end_date: endDate,
@@ -90,7 +90,10 @@ export function SeasonalOffers({ settings, onUpdate }: SeasonalOffersProps) {
         product_ids: productIds ? productIds.split(',').map(id => id.trim()) : null,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       resetForm();
       toast.success('✅ Oferta temporal creada');
     } catch (error: any) {
@@ -106,9 +109,12 @@ export function SeasonalOffers({ settings, onUpdate }: SeasonalOffersProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.removeSeasonalOffer(deleteDialog.name);
+      await AdminConfigController.removeSeasonalOffer(deleteDialog.name);
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success('✅ Oferta temporal eliminada');
       setDeleteDialog({ open: false, name: null });
     } catch (error: any) {

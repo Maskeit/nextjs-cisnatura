@@ -102,6 +102,100 @@ export interface AdminSettingsUpdateResponse {
   data: AdminSettings;
 }
 
+// Respuestas específicas para cada panel
+export interface MaintenanceResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    maintenance_mode: boolean;
+    maintenance_message: string | null;
+  };
+}
+
+export interface ShippingResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    shipping_price: number;
+    free_shipping_threshold: number | null;
+  };
+}
+
+export interface AllDiscountsResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    global: {
+      enabled: boolean;
+      percentage: number;
+      name: string | null;
+    };
+    categories: Record<string, CategoryDiscount>;
+    products: Record<string, ProductDiscount>;
+  };
+}
+
+export interface GlobalDiscountResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    enabled: boolean;
+    percentage: number;
+    name: string | null;
+  };
+}
+
+export interface CategoryDiscountsResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    category_discounts: Record<string, CategoryDiscount>;
+  };
+}
+
+export interface ProductDiscountsResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    product_discounts: Record<string, ProductDiscount>;
+  };
+}
+
+export interface SeasonalOffersResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    seasonal_offers: SeasonalOffer[];
+  };
+}
+
+export interface RegistrationResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    allow_user_registration: boolean;
+    max_items_per_order: number;
+  };
+}
+
+
+export interface MaxItemsOperationResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    max_items_per_order: number;
+  };
+}
+
 // ==================== ERROR TYPES ====================
 
 export type AdminSettingsErrorCode =

@@ -4,6 +4,8 @@ import type {
   CartSummaryResponse,
   AddToCartRequest,
   UpdateCartItemRequest,
+  ShippingInfoResponse,
+  ShippingCalculationResponse,
 } from "@/interfaces/Cart";
 
 class CartController {
@@ -99,6 +101,27 @@ class CartController {
     }
     
     return this.updateItem(productId, { quantity: newQuantity });
+  };
+
+  /**
+   * Obtener información de envío (público)
+   * @returns Promise con la información de precios de envío
+   */
+  static getShippingInfo = async (): Promise<ShippingInfoResponse> => {
+    const response = await api.get("/settings/shipping/info");
+    return response.data;
+  };
+
+  /**
+   * Calcular el costo de envío basado en el total del pedido
+   * @param total - Total del pedido
+   * @returns Promise con el cálculo de envío
+   */
+  static calculateShipping = async (
+    total: number
+  ): Promise<ShippingCalculationResponse> => {
+    const response = await api.get(`/settings/shipping/calculate?total=${total}`);
+    return response.data;
   };
 }
 

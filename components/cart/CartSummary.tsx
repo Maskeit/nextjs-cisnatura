@@ -1,36 +1,78 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Truck } from 'lucide-react';
+import CartController from '@/lib/CartController';
+import type { ShippingCalculation } from '@/interfaces/Cart';
 
 interface CartSummaryProps {
   subtotal: number;
   totalItems: number;
+  totalDiscount?: number;
+  totalWithoutDiscount?: number;
   isLoading?: boolean;
 }
 
-const SHIPPING_COST = 250;
-
-export default function CartSummary({ subtotal, totalItems, isLoading = false }: CartSummaryProps) {
+export default function CartSummary({ 
+  subtotal, 
+  totalItems, 
+  totalDiscount = 0,
+  totalWithoutDiscount,
+  isLoading = false 
+}: CartSummaryProps) {
   const router = useRouter();
-  const total = subtotal + SHIPPING_COST;
+  const [shippingCalc, setShippingCalc] = useState<ShippingCalculation | null>(null);
+  const [loadingShipping, setLoadingShipping] = useState(false);
 
-  const formattedSubtotal = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(subtotal);
+  useEffect(() => {
+    const fetchShippingCost = async () => {
+      if (subtotal <= 0) {
+        setShippingCalc(null);
+        return;
+      }
 
-  const formattedShipping = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(SHIPPING_COST);
+      setLoadingShipping(true);
+      try {
+        const response = await CartController.calculateShipping(subtotal);
+        setShippingCalc(response.data);
+      } catch (error) {
+        console.error('Error calculating shipping:', error);
+        // Fallback a valores por defecto si falla
+        setShippingCalc({
+          shipping_price: 250,
+          order_total: subtotal,
+          free_shipping_threshold: null,
+          remaining_for_free_shipping: null,
+        });
+      } finally {
+        setLoadingShipping(false);
+      }
+    };
 
-  const formattedTotal = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(total);
+    fetchShippingCost();
+  }, [subtotal]);
+
+  const shippingCost = shippingCalc?.shipping_price || 0;
+  const total = subtotal + shippingCost;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    }).format(amount);
+  };
+
+  const formattedSubtotal = formatCurrency(subtotal);
+  const formattedShipping = shippingCost === 0 ? 'Gratis' : formatCurrency(shippingCost);
+  const formattedTotal = formatCurrency(total);
+
+  const showFreeShippingProgress = 
+    shippingCalc?.free_shipping_threshold && 
+    shippingCalc?.remaining_for_free_shipping && 
+    shippingCalc.remaining_for_free_shipping > 0;
 
   const handleCheckout = () => {
     router.push('/domicilio');
@@ -41,6 +83,30 @@ export default function CartSummary({ subtotal, totalItems, isLoading = false }:
       <h2 className="text-xl md:text-2xl font-bold">Resumen del pedido</h2>
       
       <Separator />
+
+      {/* Subtotal sin descuento (si aplica) */}
+      {totalDiscount > 0 && totalWithoutDiscount && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">
+            Subtotal original
+          </span>
+          <span className="text-sm text-muted-foreground line-through">
+            {formatCurrency(totalWithoutDiscount)}
+          </span>
+        </div>
+      )}
+
+      {/* Descuentos aplicados */}
+      {totalDiscount > 0 && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm md:text-base text-green-600 dark:text-green-400 font-medium">
+            Descuentos aplicados
+          </span>
+          <span className="font-semibold text-base md:text-lg text-green-600 dark:text-green-400">
+            -{formatCurrency(totalDiscount)}
+          </span>
+        </div>
+      )}
 
       {/* Subtotal */}
       <div className="flex justify-between items-center">
@@ -54,11 +120,31 @@ export default function CartSummary({ subtotal, totalItems, isLoading = false }:
 
       {/* Envío */}
       <div className="flex justify-between items-center">
-        <span className="text-sm md:text-base text-muted-foreground">Envío</span>
-        <span className="font-semibold text-base md:text-lg">
-          {formattedShipping}
+        <span className="text-sm md:text-base text-muted-foreground flex items-center gap-2">
+          <Truck className="h-4 w-4" />
+          Envío
+        </span>
+        <span className={`font-semibold text-base md:text-lg ${shippingCost === 0 ? 'text-green-600' : ''}`}>
+          {loadingShipping ? 'Calculando...' : formattedShipping}
         </span>
       </div>
+
+      {/* Progreso para envío gratis */}
+      {showFreeShippingProgress && (
+        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          <p className="text-xs md:text-sm text-green-700 dark:text-green-300 text-center">
+            🎉 ¡Agrega {formatCurrency(shippingCalc.remaining_for_free_shipping!)} más para obtener envío gratis!
+          </p>
+        </div>
+      )}
+
+      {shippingCost === 0 && shippingCalc && (
+        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          <p className="text-xs md:text-sm text-green-700 dark:text-green-300 text-center font-medium">
+            🎉 ¡Felicidades! Tienes envío gratis
+          </p>
+        </div>
+      )}
 
       <Separator />
 
@@ -83,9 +169,11 @@ export default function CartSummary({ subtotal, totalItems, isLoading = false }:
 
       {/* Información adicional */}
       <div className="space-y-2 pt-4">
-        <p className="text-xs text-muted-foreground text-center">
-          El envío puede variar según tu ubicación
-        </p>
+        {shippingCalc?.free_shipping_threshold && (
+          <p className="text-xs text-muted-foreground text-center">
+            Envío gratis en compras mayores a {formatCurrency(shippingCalc.free_shipping_threshold)}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground text-center">
           Los impuestos se calcularán en el siguiente paso
         </p>

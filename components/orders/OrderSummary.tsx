@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import CartController from '@/lib/CartController';
 import AddressController from '@/lib/AddressController';
 import OrdersController from '@/lib/OrdersController';
-import { Cart } from '@/interfaces/Cart';
+import { Cart, ShippingCalculation } from '@/interfaces/Cart';
 import { Address } from '@/interfaces/Address';
 import Image from 'next/image';
 
@@ -21,6 +21,7 @@ export default function OrderSummary() {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [address, setAddress] = useState<Address | null>(null);
+  const [shippingCalc, setShippingCalc] = useState<ShippingCalculation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +61,21 @@ export default function OrderSummary() {
 
       setCart(cartResponse.data);
       setAddress(addressResponse.data);
+
+      // Calcular costo de envío
+      try {
+        const shippingResponse = await CartController.calculateShipping(cartResponse.data.total_amount);
+        setShippingCalc(shippingResponse.data);
+      } catch (shippingErr) {
+        console.error('Error calculando envío:', shippingErr);
+        // Fallback si falla el cálculo
+        setShippingCalc({
+          shipping_price: 250,
+          order_total: cartResponse.data.total_amount,
+          free_shipping_threshold: null,
+          remaining_for_free_shipping: null,
+        });
+      }
 
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
@@ -139,9 +155,8 @@ export default function OrderSummary() {
     return null;
   }
 
-  const shippingCost: number = 0; // Por definir
-  const tax: number = cart.total_amount * 0.16; // IVA 16%
-  const total: number = cart.total_amount + shippingCost + tax;
+  const shippingCost: number = shippingCalc?.shipping_price || 0;  
+  const total: number = cart.total_amount + shippingCost;
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -254,14 +269,21 @@ export default function OrderSummary() {
                 </div>
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-muted-foreground">Envío</span>
-                  <span className="font-medium">
-                    {shippingCost === 0 ? 'Gratis' : `$${shippingCost.toFixed(2)}`}
+                  <span className={`font-medium ${shippingCost === 0 ? 'text-green-600' : ''}`}>
+                    {shippingCost === 0 ? '¡Gratis! 🎉' : `$${shippingCost.toFixed(2)}`}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs md:text-sm">
+                {shippingCalc?.free_shipping_threshold && shippingCost === 0 && (
+                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-2">
+                    <p className="text-xs text-green-700 dark:text-green-300 text-center font-medium">
+                      ¡Tienes envío gratis en esta compra!
+                    </p>
+                  </div>
+                )}
+                {/* <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-muted-foreground">IVA (16%)</span>
                   <span className="font-medium">${tax.toFixed(2)}</span>
-                </div>
+                </div> */}
                 <Separator />
                 <div className="flex justify-between">
                   <span className="text-base md:text-lg font-semibold">Total</span>

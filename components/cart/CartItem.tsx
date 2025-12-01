@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CartItem as CartItemType } from '@/interfaces/Cart';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Minus, Plus, Trash2, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CartItemProps {
@@ -18,15 +19,21 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  const formattedPrice = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(item.product.price);
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    }).format(amount);
+  };
 
-  const formattedSubtotal = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(item.subtotal);
+  const formattedPrice = formatCurrency(item.product.price);
+  const formattedOriginalPrice = item.product.has_discount 
+    ? formatCurrency(item.product.original_price) 
+    : null;
+  const formattedSubtotal = formatCurrency(item.subtotal);
+  const formattedSubtotalWithoutDiscount = item.discount_amount > 0
+    ? formatCurrency(item.subtotal_without_discount)
+    : null;
 
   const imageUrl = item.product.image_url
     ? `${process.env.NEXT_PUBLIC_API_URL}${item.product.image_url}`
@@ -98,15 +105,35 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Información del producto */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <Link 
-            href={`/productos/${item.product.slug}`}
-            className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2"
-          >
-            {item.product.name}
-          </Link>
-          <p className="text-sm text-muted-foreground mt-1">
-            {formattedPrice} c/u
-          </p>
+          <div className="flex items-start gap-2 mb-1">
+            <Link 
+              href={`/productos/${item.product.slug}`}
+              className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2 flex-1"
+            >
+              {item.product.name}
+            </Link>
+            {item.product.has_discount && (
+              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 text-xs flex-shrink-0">
+                <Tag className="h-3 w-3 mr-1" />
+                Con descuento
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm font-semibold text-foreground">
+              {formattedPrice} c/u
+            </p>
+            {formattedOriginalPrice && (
+              <p className="text-xs text-muted-foreground line-through">
+                {formattedOriginalPrice}
+              </p>
+            )}
+          </div>
+          {item.product.has_discount && item.product.discount && (
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              {item.product.discount.discount_name} (-{item.product.discount.discount_percentage}%)
+            </p>
+          )}
         </div>
 
         {/* Controles de cantidad - Mobile */}
@@ -136,9 +163,19 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
           </div>
 
           <div className="text-right">
+            {formattedSubtotalWithoutDiscount && (
+              <p className="text-xs text-muted-foreground line-through">
+                {formattedSubtotalWithoutDiscount}
+              </p>
+            )}
             <p className="font-bold text-lg text-primary">
               {formattedSubtotal}
             </p>
+            {item.discount_amount > 0 && (
+              <p className="text-xs text-green-600 dark:text-green-400">
+                Ahorro: {formatCurrency(item.discount_amount)}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -169,10 +206,20 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
           </Button>
         </div>
 
-        <div className="text-right min-w-[100px]">
+        <div className="text-right min-w-[120px]">
+          {formattedSubtotalWithoutDiscount && (
+            <p className="text-sm text-muted-foreground line-through">
+              {formattedSubtotalWithoutDiscount}
+            </p>
+          )}
           <p className="font-bold text-xl text-primary">
             {formattedSubtotal}
           </p>
+          {item.discount_amount > 0 && (
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              Ahorro: {formatCurrency(item.discount_amount)}
+            </p>
+          )}
         </div>
 
         <Button

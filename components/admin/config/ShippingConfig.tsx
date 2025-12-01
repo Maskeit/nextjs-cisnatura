@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,12 @@ export function ShippingConfig({ settings, onUpdate }: ShippingConfigProps) {
   );
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sincronizar con cambios externos
+  useEffect(() => {
+    setShippingPrice(settings.shipping_price.toString());
+    setFreeThreshold(settings.free_shipping_threshold?.toString() || '');
+  }, [settings.shipping_price, settings.free_shipping_threshold]);
+
   const handleSave = async () => {
     const price = parseFloat(shippingPrice);
     const threshold = freeThreshold ? parseFloat(freeThreshold) : null;
@@ -39,12 +45,15 @@ export function ShippingConfig({ settings, onUpdate }: ShippingConfigProps) {
     setIsLoading(true);
 
     try {
-      const updated = await AdminConfigController.updateShipping({
+      await AdminConfigController.updateShipping({
         shipping_price: price,
         free_shipping_threshold: threshold,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success('✅ Configuración de envío actualizada');
     } catch (error: any) {
       console.error('Error updating shipping:', error);

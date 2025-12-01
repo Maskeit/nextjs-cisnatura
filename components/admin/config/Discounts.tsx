@@ -1,12 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -28,7 +35,9 @@ import {
 import { Percent, Loader2, Plus, Trash2, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminConfigController from '@/lib/AdminConfigController';
+import ProductController from '@/lib/ProductController';
 import { AdminSettings } from '@/interfaces/AdminConfig';
+import { SimpleList } from '@/interfaces/Products';
 
 interface DiscountsProps {
   settings: AdminSettings;
@@ -37,6 +46,9 @@ interface DiscountsProps {
 
 export function Discounts({ settings, onUpdate }: DiscountsProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<SimpleList[]>([]);
+  const [products, setProducts] = useState<SimpleList[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   
   // Global discount
   const [globalEnabled, setGlobalEnabled] = useState(settings.global_discount_enabled);
@@ -50,10 +62,49 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
   const [newCategoryPercentage, setNewCategoryPercentage] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
 
+  // Sincronizar con cambios externos
+  useEffect(() => {
+    setGlobalEnabled(settings.global_discount_enabled);
+    setGlobalPercentage(settings.global_discount_percentage.toString());
+    setGlobalName(settings.global_discount_name || '');
+  }, [settings.global_discount_enabled, settings.global_discount_percentage, settings.global_discount_name]);
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await AdminConfigController.getCategoriesForDrop();
+        setCategories(response.categories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        toast.error('Error al cargar categorías');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Product discount
   const [newProductId, setNewProductId] = useState('');
   const [newProductPercentage, setNewProductPercentage] = useState('');
   const [newProductName, setNewProductName] = useState('');
+
+  // cargar productos en el dropdown
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await AdminConfigController.getProductsForDrop();
+        setProducts(response.products);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        toast.error('Error al cargar productos');
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Delete confirmation
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -73,13 +124,16 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.updateGlobalDiscount({
+      await AdminConfigController.updateGlobalDiscount({
         enabled: globalEnabled,
         percentage,
         name: globalName || undefined,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success('✅ Descuento global actualizado');
     } catch (error: any) {
       console.error('Error updating global discount:', error);
@@ -104,13 +158,16 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.addCategoryDiscount({
+      await AdminConfigController.addCategoryDiscount({
         category_id: newCategoryId,
         percentage,
         name: newCategoryName,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       setNewCategoryId('');
       setNewCategoryPercentage('');
       setNewCategoryName('');
@@ -138,13 +195,16 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.addProductDiscount({
+      await AdminConfigController.addProductDiscount({
         product_id: newProductId,
         percentage,
         name: newProductName,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       setNewProductId('');
       setNewProductPercentage('');
       setNewProductName('');
@@ -162,14 +222,16 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
 
     setIsLoading(true);
     try {
-      let updated;
       if (deleteDialog.type === 'category') {
-        updated = await AdminConfigController.removeCategoryDiscount(deleteDialog.id);
+        await AdminConfigController.removeCategoryDiscount(deleteDialog.id);
       } else {
-        updated = await AdminConfigController.removeProductDiscount(deleteDialog.id);
+        await AdminConfigController.removeProductDiscount(deleteDialog.id);
       }
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success('✅ Descuento eliminado');
       setDeleteDialog({ open: false, type: null, id: null, name: null });
     } catch (error: any) {
@@ -267,12 +329,29 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
             {/* Category Discounts */}
             <TabsContent value="category" className="space-y-4">
               <div className="space-y-3">
-                <Input
-                  placeholder="ID de categoría"
-                  value={newCategoryId}
-                  onChange={(e) => setNewCategoryId(e.target.value)}
-                  disabled={isLoading}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="category-select">Categoría</Label>
+                  <Select
+                    value={newCategoryId}
+                    onValueChange={setNewCategoryId}
+                    disabled={isLoading || loadingCategories}
+                  >
+                    <SelectTrigger id="category-select">
+                      <SelectValue placeholder={
+                        loadingCategories 
+                          ? "Cargando categorías..." 
+                          : "Selecciona una categoría"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Input
                   type="number"
                   min="0"
@@ -302,35 +381,40 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Categoría ID</TableHead>
-                      <TableHead>Nombre</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Nombre Descuento</TableHead>
                       <TableHead>Descuento</TableHead>
                       <TableHead className="w-[100px]">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(settings.category_discounts).map(([id, discount]) => (
-                      <TableRow key={id}>
-                        <TableCell className="font-mono">{id}</TableCell>
-                        <TableCell>{discount.name}</TableCell>
-                        <TableCell>{discount.percentage}%</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteDialog({
-                              open: true,
-                              type: 'category',
-                              id,
-                              name: discount.name,
-                            })}
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {Object.entries(settings.category_discounts).map(([id, discount]) => {
+                      const category = categories.find(c => c.id.toString() === id);
+                      return (
+                        <TableRow key={id}>
+                          <TableCell>
+                            {category?.name || `ID: ${id}`}
+                          </TableCell>
+                          <TableCell>{discount.name}</TableCell>
+                          <TableCell>{discount.percentage}%</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteDialog({
+                                open: true,
+                                type: 'category',
+                                id,
+                                name: discount.name,
+                              })}
+                              disabled={isLoading}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               ) : (
@@ -344,77 +428,95 @@ export function Discounts({ settings, onUpdate }: DiscountsProps) {
             {/* Product Discounts */}
             <TabsContent value="product" className="space-y-4">
               <div className="space-y-3">
-                <Input
-                  placeholder="ID de producto"
-                  value={newProductId}
-                  onChange={(e) => setNewProductId(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Porcentaje"
-                  value={newProductPercentage}
-                  onChange={(e) => setNewProductPercentage(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Input
-                  placeholder="Nombre del descuento"
-                  value={newProductName}
-                  onChange={(e) => setNewProductName(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={handleAddProductDiscount}
-                  disabled={isLoading}
-                  className="w-full"
+              <div className="space-y-2">
+                <Label htmlFor="product-select">Producto</Label>
+                <Select
+                value={newProductId}
+                onValueChange={setNewProductId}
+                disabled={isLoading}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar descuento
-                </Button>
+                <SelectTrigger id="product-select">
+                  <SelectValue placeholder="Selecciona un producto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id.toString()}>
+                    {product.name}
+                  </SelectItem>
+                  ))}
+                </SelectContent>
+                </Select>
+              </div>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="Porcentaje"
+                value={newProductPercentage}
+                onChange={(e) => setNewProductPercentage(e.target.value)}
+                disabled={isLoading}
+              />
+              <Input
+                placeholder="Nombre del descuento"
+                value={newProductName}
+                onChange={(e) => setNewProductName(e.target.value)}
+                disabled={isLoading}
+              />
+              <Button
+                onClick={handleAddProductDiscount}
+                disabled={isLoading}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar descuento
+              </Button>
               </div>
 
               {Object.keys(settings.product_discounts).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto ID</TableHead>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Descuento</TableHead>
-                      <TableHead className="w-[100px]">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(settings.product_discounts).map(([id, discount]) => (
-                      <TableRow key={id}>
-                        <TableCell className="font-mono">{id}</TableCell>
-                        <TableCell>{discount.name}</TableCell>
-                        <TableCell>{discount.percentage}%</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteDialog({
-                              open: true,
-                              type: 'product',
-                              id,
-                              name: discount.name,
-                            })}
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <Table>
+                <TableHeader>
+                <TableRow>
+                  <TableHead>Producto</TableHead>
+                  <TableHead>Nombre Descuento</TableHead>
+                  <TableHead>Descuento</TableHead>
+                  <TableHead className="w-[100px]">Acciones</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {Object.entries(settings.product_discounts).map(([id, discount]) => {
+                  const product = products.find(p => p.id.toString() === id);
+                  return (
+                  <TableRow key={id}>
+                    <TableCell>
+                    {product?.name || `ID: ${id}`}
+                    </TableCell>
+                    <TableCell>{discount.name}</TableCell>
+                    <TableCell>{discount.percentage}%</TableCell>
+                    <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteDialog({
+                      open: true,
+                      type: 'product',
+                      id,
+                      name: discount.name,
+                      })}
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                    </TableCell>
+                  </TableRow>
+                  );
+                })}
+                </TableBody>
+              </Table>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Tag className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No hay descuentos de producto configurados</p>
-                </div>
+              <div className="text-center py-8 text-muted-foreground">
+                <Tag className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No hay descuentos de producto configurados</p>
+              </div>
               )}
             </TabsContent>
           </Tabs>

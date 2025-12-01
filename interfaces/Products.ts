@@ -243,6 +243,31 @@ export interface CategoryResponse {
     created_at: string | null;
   };
 }
+// ================== Categories y products para desplegables ==================
+
+export interface SimpleList {
+  id: number;
+  name: string;
+}
+
+export interface ListCategoriesDrop {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    categories: SimpleList[];
+  };
+}
+
+export interface ListProductsDrop {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    products: SimpleList[];
+  };
+}
+
 
 // ==================== UPLOADS ====================
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -11,19 +11,24 @@ import { loginWithGoogle, signOutFirebase } from "@/lib/Firebase";
 
 import { ArrowBigLeftDashIcon } from "lucide-react"
 
-export default function LoginPage() {
-  const router = useRouter();
+// Componente separado para manejar los searchParams
+function SessionExpiredHandler() {
   const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  // Mostrar mensaje si la sesión expiró
   useEffect(() => {
     const sessionExpired = searchParams.get('session_expired');
     if (sessionExpired === 'true') {
       toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
     }
   }, [searchParams]);
+
+  return null;
+}
+
+function LoginContent() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (values: UserLogin) => {
     setIsLoading(true);
@@ -149,22 +154,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-muted flex min-h-svh flex-col justify-center items-center p-6 md:p-10">
-      <div className="bg-muted w-full max-w-sm md:max-w-4xl">
-        <div className="flex justify-center gap-2 md:justify-start mb-4">
-          <a href="/" className="flex items-center gap-2 font-medium hover:opacity-80 transition-opacity">
-            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <ArrowBigLeftDashIcon className="size-4" />
-            </div>
-            Volver a CISnatura
-          </a>
+    <>
+      <Suspense fallback={null}>
+        <SessionExpiredHandler />
+      </Suspense>
+      <div className="bg-muted flex min-h-svh flex-col justify-center items-center p-6 md:p-10">
+        <div className="bg-muted w-full max-w-sm md:max-w-4xl">
+          <div className="flex justify-center gap-2 md:justify-start mb-4">
+            <a href="/" className="flex items-center gap-2 font-medium hover:opacity-80 transition-opacity">
+              <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+                <ArrowBigLeftDashIcon className="size-4" />
+              </div>
+              Volver a CISnatura
+            </a>
+          </div>
+          <LoginForm
+            onSubmit={handleLogin}
+            onGoogleLogin={handleGoogleLogin}
+            isLoading={isLoading}
+            error={error} />
         </div>
-        <LoginForm
-          onSubmit={handleLogin}
-          onGoogleLogin={handleGoogleLogin}
-          isLoading={isLoading}
-          error={error} />
       </div>
-    </div>
+    </>
   )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-muted flex min-h-svh flex-col justify-center items-center p-6 md:p-10">
+        <div className="bg-muted w-full max-w-sm md:max-w-4xl">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
+  );
 }

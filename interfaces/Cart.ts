@@ -1,41 +1,72 @@
+// ==================== PRODUCT DISCOUNT INFO ====================
+export interface CartProductDiscount {
+  original_price: number;
+  discounted_price: number;
+  discount_percentage: number;
+  discount_name: string;
+  discount_source: 'global' | 'category' | 'product' | 'seasonal';
+  savings: number;
+  is_active: boolean;
+}
+
 // ==================== PRODUCT INFO ====================
 export interface CartProduct {
   id: number;
   name: string;
   slug: string;
   price: number;
+  original_price: number;
   stock: number;
   image_url: string | null;
   is_active: boolean;
+  has_discount: boolean;
+  discount: CartProductDiscount | null;
 }
 
 // ==================== CART ITEM ====================
 export interface CartItem {
-  id: number;
-  cart_id: number;
+  id?: number;
+  cart_id?: number;
   product_id: number;
   quantity: number;
   product: CartProduct;
   subtotal: number;
-  created_at: string | null;
-  updated_at: string | null;
+  subtotal_without_discount: number;
+  discount_amount: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 // ==================== CART ====================
 export interface Cart {
-  id: number;
+  id?: number;
   user_id: string;
-  is_active: boolean;
+  is_active?: boolean;
   items: CartItem[];
   total_items: number;
   total_amount: number;
-  created_at: string | null;
+  total_discount: number;
+  total_without_discount: number;
+  created_at?: string | null;
 }
 
 // ==================== CART SUMMARY ====================
 export interface CartSummary {
   total_items: number;
   total_amount: number;
+}
+
+// ==================== SHIPPING INFO ====================
+export interface ShippingInfo {
+  shipping_price: number;
+  free_shipping_threshold: number | null;
+}
+
+export interface ShippingCalculation {
+  shipping_price: number;
+  order_total: number;
+  free_shipping_threshold: number | null;
+  remaining_for_free_shipping: number | null;
 }
 
 // ==================== API RESPONSES ====================
@@ -51,6 +82,20 @@ export interface CartSummaryResponse {
   status_code: number;
   message: string;
   data: CartSummary;
+}
+
+export interface ShippingInfoResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: ShippingInfo;
+}
+
+export interface ShippingCalculationResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: ShippingCalculation;
 }
 
 // ==================== REQUEST BODIES ====================

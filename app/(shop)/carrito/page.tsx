@@ -237,6 +237,8 @@ export default function CarritoPage() {
               <CartSummary
                 subtotal={cart.total_amount}
                 totalItems={cart.total_items}
+                totalDiscount={cart.total_discount}
+                totalWithoutDiscount={cart.total_without_discount}
                 isLoading={isLoading}
               />
             </div>

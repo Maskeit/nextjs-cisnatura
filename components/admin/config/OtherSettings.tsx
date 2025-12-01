@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -21,14 +21,23 @@ export function OtherSettings({ settings, onUpdate }: OtherSettingsProps) {
   const [allowRegistration, setAllowRegistration] = useState(settings.allow_user_registration);
   const [maxItems, setMaxItems] = useState(settings.max_items_per_order.toString());
 
+  // Sincronizar con cambios externos
+  useEffect(() => {
+    setAllowRegistration(settings.allow_user_registration);
+    setMaxItems(settings.max_items_per_order.toString());
+  }, [settings.allow_user_registration, settings.max_items_per_order]);
+
   const handleUpdateRegistration = async (enabled: boolean) => {
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.updateUserRegistration({
+      await AdminConfigController.updateUserRegistration({
         allow_user_registration: enabled,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       setAllowRegistration(enabled);
       toast.success(
         enabled 
@@ -54,11 +63,14 @@ export function OtherSettings({ settings, onUpdate }: OtherSettingsProps) {
 
     setIsLoading(true);
     try {
-      const updated = await AdminConfigController.updateMaxItems({
+      await AdminConfigController.updateMaxItems({
         max_items_per_order: max,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success('✅ Límite de items actualizado');
     } catch (error: any) {
       console.error('Error updating max items:', error);

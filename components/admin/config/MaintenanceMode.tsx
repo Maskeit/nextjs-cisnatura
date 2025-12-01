@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,12 @@ export function MaintenanceMode({ settings, onUpdate }: MaintenanceModeProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sincronizar con cambios externos
+  React.useEffect(() => {
+    setIsEnabled(settings.maintenance_mode);
+    setMessage(settings.maintenance_message || '');
+  }, [settings.maintenance_mode, settings.maintenance_message]);
+
   const handleToggle = (checked: boolean) => {
     setIsEnabled(checked);
     if (checked) {
@@ -46,12 +53,15 @@ export function MaintenanceMode({ settings, onUpdate }: MaintenanceModeProps) {
     setIsLoading(true);
 
     try {
-      const updated = await AdminConfigController.updateMaintenance({
+      await AdminConfigController.updateMaintenance({
         maintenance_mode: modeToSet,
         maintenance_message: message || undefined,
       });
       
-      onUpdate(updated);
+      // Refrescar configuraciones completas desde el servidor
+      const refreshed = await AdminConfigController.getSettings();
+      onUpdate(refreshed);
+      
       toast.success(
         modeToSet 
           ? '⚠️ Modo mantenimiento activado'
