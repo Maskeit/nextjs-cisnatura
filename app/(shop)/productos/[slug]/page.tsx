@@ -147,6 +147,12 @@ export default function ProductPage() {
               </span>
             </div>
           )}
+          {/* Badge de descuento */}
+          {product.has_discount && product.discount && (
+            <div className="absolute top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-full font-bold text-2xl shadow-lg">
+              -{product.discount.discount_percentage}%
+            </div>
+          )}
         </div>
 
         {/* Columna derecha - Información */}
@@ -177,12 +183,39 @@ export default function ProductPage() {
 
           {/* Precio */}
           <div className="border-y py-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold text-primary">
-                {formattedPrice}
-              </span>
-              <span className="text-xl text-muted-foreground">MXN</span>
-            </div>
+            {product.has_discount && product.discount ? (
+              <div className="space-y-3">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-5xl font-bold text-primary">
+                    {formattedPrice}
+                  </span>
+                  <span className="text-3xl text-muted-foreground line-through">
+                    {new Intl.NumberFormat('es-MX', {
+                      style: 'currency',
+                      currency: 'MXN',
+                    }).format(product.discount.original_price)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+                    🎉 {product.discount.discount_name}
+                  </span>
+                  <span className="text-base text-muted-foreground">
+                    (Ahorras {new Intl.NumberFormat('es-MX', {
+                      style: 'currency',
+                      currency: 'MXN',
+                    }).format(product.discount.savings)})
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-primary">
+                  {formattedPrice}
+                </span>
+                <span className="text-xl text-muted-foreground">MXN</span>
+              </div>
+            )}
           </div>
 
           {/* Descripción */}

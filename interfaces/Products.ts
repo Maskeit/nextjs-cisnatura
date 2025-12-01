@@ -1,8 +1,19 @@
+export interface ProductDiscount {
+    original_price: number;
+    discounted_price: number;
+    discount_percentage: number;
+    discount_name: string;
+    discount_source: 'global' | 'category' | 'product' | 'seasonal';
+    savings: number;
+    is_active: boolean;
+}
+
 export interface Product {
     id: number;
     name: string;
     slug: string;
     description: string | null;
+    original_price?: number;
     price: number;
     stock: number;
     category_id: number;
@@ -10,6 +21,8 @@ export interface Product {
     created_at: string | null;
     is_active?: boolean;
     updated_at?: string | null;
+    discount?: ProductDiscount | null;
+    has_discount?: boolean;
 }
 
 export interface Pagination {

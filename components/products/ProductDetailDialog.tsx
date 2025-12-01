@@ -55,6 +55,12 @@ export default function ProductDetailDialog({
                 </span>
               </div>
             )}
+            {/* Badge de descuento */}
+            {product.has_discount && product.discount && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white px-5 py-2 rounded-full font-bold text-xl shadow-lg">
+                -{product.discount.discount_percentage}%
+              </div>
+            )}
           </div>
 
           {/* Columna derecha - Detalles */}
@@ -116,9 +122,28 @@ export default function ProductDetailDialog({
             <DialogFooter className="px-8 py-6 border-t bg-muted/30 flex-row items-center justify-between space-x-0 shrink-0">
               <div className="flex flex-col">
                 <span className="text-base text-muted-foreground mb-1">Precio</span>
-                <span className="text-4xl font-bold text-primary">
-                  {formattedPrice}
-                </span>
+                {product.has_discount && product.discount ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-primary">
+                        {formattedPrice}
+                      </span>
+                      <span className="text-xl text-muted-foreground line-through">
+                        {new Intl.NumberFormat('es-MX', {
+                          style: 'currency',
+                          currency: 'MXN',
+                        }).format(product.discount.original_price)}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                      {product.discount.discount_name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-4xl font-bold text-primary">
+                    {formattedPrice}
+                  </span>
+                )}
               </div>
               <Button
                 size="lg"

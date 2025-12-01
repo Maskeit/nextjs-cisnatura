@@ -92,6 +92,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               </span>
             </div>
           )}
+          {/* Badge de descuento */}
+          {product.has_discount && product.discount && (
+            <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+              -{product.discount.discount_percentage}%
+            </div>
+          )}
         </Link>
 
         <CardContent className="pt-4">
@@ -111,10 +117,33 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Precio */}
         <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-2xl font-bold text-primary">
-            {formattedPrice}
-          </span>
+          {product.has_discount && product.discount ? (
+            <>
+              <span className="text-2xl font-bold text-primary">
+                {formattedPrice}
+              </span>
+              <span className="text-lg text-muted-foreground line-through">
+                {new Intl.NumberFormat('es-MX', {
+                  style: 'currency',
+                  currency: 'MXN',
+                }).format(product.discount.original_price)}
+              </span>
+            </>
+          ) : (
+            <span className="text-2xl font-bold text-primary">
+              {formattedPrice}
+            </span>
+          )}
         </div>
+        
+        {/* Nombre del descuento */}
+        {product.has_discount && product.discount && (
+          <div className="mb-2">
+            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+              🎉 {product.discount.discount_name}
+            </span>
+          </div>
+        )}
 
         {/* Stock */}
         <div className="flex items-center gap-2 text-sm">

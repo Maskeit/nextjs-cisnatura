@@ -14,7 +14,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Package, ShoppingBag, Users } from "lucide-react";
+import { Package, ShoppingBag, Users, Settings } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -41,6 +41,12 @@ export default function AdminLayout({
       href: "/admin/users",
       icon: Users,
       description: "Administrar usuarios"
+    },
+    {
+      title: "Configuración",
+      href: "/admin/configuration",
+      icon: Settings,
+      description: "Ajustes del sistema"
     },
   ];
 
