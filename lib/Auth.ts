@@ -65,6 +65,12 @@ export const AuthAPI = {
             // Limpiar tokens de las cookies y axios siempre
             this.removeAuthToken();
             cookieStorage.clearAuth();
+            
+            // Limpiar localStorage relacionado con checkout/carrito
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('selected_address_id');
+                localStorage.removeItem('last_order_id');
+            }
         }
     },
 

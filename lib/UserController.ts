@@ -324,8 +324,6 @@ export const deleteUser = async (userId: string): Promise<UserDeleteResponse> =>
  * 
  * @example
  * const stats = await getUserStats();
- * console.log(`Total usuarios: ${stats.data.total_users}`);
- * console.log(`Nuevos hoy: ${stats.data.new_users_today}`);
  */
 export const getUserStats = async (): Promise<UserStatsResponse> => {
   const response = await api.get<UserStatsResponse>('/users/admin/stats');

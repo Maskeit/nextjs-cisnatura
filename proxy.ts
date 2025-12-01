@@ -17,13 +17,28 @@ const adminRoutes = ['/admin'];
 // Rutas solo para usuarios no autenticados
 const authRoutes = ['/login', '/register'];
 
+// Helper para manejar usuarios no autenticados
+function handleUnauthenticated(request: NextRequest, pathname: string) {
+  const loginUrl = new URL('/login', request.url);
+  loginUrl.searchParams.set('redirect', pathname);
+  
+  const response = NextResponse.redirect(loginUrl);
+  
+  // Limpiar cookies corruptas o inválidas
+  response.cookies.delete('access_token');
+  response.cookies.delete('refresh_token');
+  response.cookies.delete('user_data');
+  
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Obtener el token y datos de usuario de las cookies
   const token = request.cookies.get('access_token')?.value;
   const userDataCookie = request.cookies.get('user_data')?.value;
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!token && !!userDataCookie;
   
   // Parsear datos del usuario para verificar rol de admin
   let isAdmin = false;
@@ -33,7 +48,14 @@ export function proxy(request: NextRequest) {
       isAdmin = userData.is_admin === true;
     } catch (error) {
       console.error('Error parsing user data:', error);
+      // Si hay error parseando user data, considerarlo no autenticado
+      return handleUnauthenticated(request, pathname);
     }
+  }
+  
+  // Si tiene token pero no tiene user_data, la sesión está corrupta
+  if (token && !userDataCookie) {
+    return handleUnauthenticated(request, pathname);
   }
 
   // Si está en una ruta de admin

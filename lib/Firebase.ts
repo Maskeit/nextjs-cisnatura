@@ -132,8 +132,7 @@ export async function loginWithGoogle(): Promise<GoogleAuthData | null> {
  */
 export async function signOutFirebase(): Promise<boolean> {
     try {
-        await firebaseSignOut(auth);
-        console.log('✅ Sesión de Firebase cerrada');
+        await firebaseSignOut(auth);        
         return true;
     } catch (error) {
         console.error('❌ Error al cerrar sesión de Firebase:', error);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider";
+import { SessionProvider } from "@/components/SessionProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -16,12 +17,14 @@ export default function UserLayout({
 }>) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <Navbar />
-      <main className="flex flex-col lg:max-w-[2000px] min-h-screen mx-auto px-8">
-        {children}
-      </main>
-      <Toaster />
-      <Footer />
+      <SessionProvider>
+        <Navbar />
+        <main className="flex flex-col lg:max-w-[2000px] min-h-screen mx-auto px-8">
+          {children}
+        </main>
+        <Toaster />
+        <Footer />
+      </SessionProvider>
     </ThemeProvider>
   );
 }

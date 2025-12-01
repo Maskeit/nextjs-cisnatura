@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { AuthAPI } from "@/lib/Auth";
@@ -13,8 +13,17 @@ import { ArrowBigLeftDashIcon } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Mostrar mensaje si la sesión expiró
+  useEffect(() => {
+    const sessionExpired = searchParams.get('session_expired');
+    if (sessionExpired === 'true') {
+      toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (values: UserLogin) => {
     setIsLoading(true);
@@ -95,7 +104,7 @@ export default function LoginPage() {
       });
 
       if (response && response.data) {
-        const { access_token, refresh_token, user } = response.data;
+        const { access_token, refresh_token, user, is_new_user } = response.data;
 
         // 3. Guardar los tokens de tu backend en cookies
         cookieStorage.setAuth(access_token, refresh_token, user);
@@ -105,7 +114,7 @@ export default function LoginPage() {
 
         // 5. Toast de éxito
         toast.success(`¡Bienvenido, ${user.full_name}!`, {
-          description: googleAuthData.isNewUser ? 'Tu cuenta ha sido creada exitosamente' : 'Has iniciado sesión correctamente'
+          description: is_new_user ? 'Tu cuenta ha sido creada exitosamente' : 'Has iniciado sesión correctamente'
         });
 
         // 6. Redirigir al home o a la página solicitada
