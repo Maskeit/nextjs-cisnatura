@@ -140,27 +140,55 @@ export const Products = ({
     );
   }
 
+  // Dividir productos en grupos de 10 para móvil
+  const firstTenProducts = products.slice(0, 10);
+  const secondTenProducts = products.slice(10, 20);
+
   return (
     <div className="space-y-6">
-      {/* Vista móvil - Carousel con 2-3 productos por fila */}
-      <div className="md:hidden">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: false,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {products.map((product) => (
-              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3">
-                <ProductCard product={product} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="-left-2" />
-          <CarouselNext className="-right-2" />
-        </Carousel>
+      {/* Vista móvil - Dos carouseles de 10 productos cada uno */}
+      <div className="md:hidden space-y-6">
+        {/* Primer carousel */}
+        {firstTenProducts.length > 0 && (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {firstTenProducts.map((product) => (
+                <CarouselItem key={product.id} className="pl-2 basis-1/2 sm:basis-1/3">
+                  <ProductCard product={product} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-2" />
+            <CarouselNext className="-right-2" />
+          </Carousel>
+        )}
+
+        {/* Segundo carousel */}
+        {secondTenProducts.length > 0 && (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {secondTenProducts.map((product) => (
+                <CarouselItem key={product.id} className="pl-2 basis-1/2 sm:basis-1/3">
+                  <ProductCard product={product} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-2" />
+            <CarouselNext className="-right-2" />
+          </Carousel>
+        )}
       </div>
 
       {/* Vista desktop - Grid tradicional */}
