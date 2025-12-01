@@ -128,9 +128,9 @@ export default function CarritoPage() {
   const isEmpty = !cart || cart.items.length === 0;
 
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-4 md:px-6 py-6 md:py-8">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <Link href="/">
           <Button variant="ghost">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -157,8 +157,8 @@ export default function CarritoPage() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-zinc-400">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 mb-6 md:mb-8">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-zinc-400">
             Carrito de Compras
           </h1>
           
@@ -212,10 +212,10 @@ export default function CarritoPage() {
           </div>
         ) : (
           // Carrito con productos
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {/* Lista de productos */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-lg border p-4 md:p-6">
+              <div className="bg-card rounded-lg border p-3 md:p-4 lg:p-6">
                 <h2 className="text-xl font-semibold mb-4">
                   Productos ({cart.total_items})
                 </h2>

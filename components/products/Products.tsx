@@ -13,6 +13,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface ProductsProps {
   selectedCategory?: number;
@@ -135,8 +142,29 @@ export const Products = ({
 
   return (
     <div className="space-y-6">
-      {/* Grid de productos - 5 columnas en desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      {/* Vista móvil - Carousel con 2-3 productos por fila */}
+      <div className="md:hidden">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: false,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {products.map((product) => (
+              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3">
+                <ProductCard product={product} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="-left-2" />
+          <CarouselNext className="-right-2" />
+        </Carousel>
+      </div>
+
+      {/* Vista desktop - Grid tradicional */}
+      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

@@ -70,7 +70,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasImage = !!product.image_url;
 
   return (
-    <Card className="group overflow-hidden transition-all hover:shadow-lg">
+    <Card className="group overflow-hidden transition-all hover:shadow-lg h-full flex flex-col">
         {/* Imagen del producto */}
         <Link 
           href={`/productos/${product.slug}`}
@@ -81,48 +81,48 @@ export default function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             className="object-cover transition-transform group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            sizes="(max-width: 640px) 45vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             unoptimized={hasImage}
             priority={false}
           />
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-destructive text-white px-4 py-2 rounded-lg font-semibold">
+              <span className="bg-destructive text-white px-2 md:px-4 py-1 md:py-2 rounded-lg font-semibold text-xs md:text-sm">
                 Agotado
               </span>
             </div>
           )}
           {/* Badge de descuento */}
           {product.has_discount && product.discount && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+            <div className="absolute top-1 right-1 md:top-2 md:right-2 bg-red-500 text-white px-1.5 py-0.5 md:px-3 md:py-1 rounded-full font-bold text-[10px] md:text-sm shadow-lg">
               -{product.discount.discount_percentage}%
             </div>
           )}
         </Link>
 
-        <CardContent className="pt-4">
+        <CardContent className="pt-2 md:pt-4 px-2 md:px-6 flex-1 flex flex-col">
           {/* Nombre del producto */}
           <Link href={`/productos/${product.slug}`}>
-            <h3 className="font-semibold text-lg line-clamp-2 hover:text-primary transition-colors mb-2">
+            <h3 className="font-semibold text-xs md:text-lg line-clamp-2 hover:text-primary transition-colors mb-1 md:mb-2">
               {product.name}
             </h3>
           </Link>
 
-        {/* Descripción (opcional) */}
+        {/* Descripción (opcional) - Solo en desktop */}
         {product.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+          <p className="hidden md:block text-sm text-muted-foreground line-clamp-2 mb-3">
             {product.description}
           </p>
         )}
 
         {/* Precio */}
-        <div className="flex items-baseline gap-2 mb-2">
+        <div className="flex flex-col md:flex-row md:items-baseline gap-0.5 md:gap-2 mb-1 md:mb-2">
           {product.has_discount && product.discount ? (
             <>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-sm md:text-2xl font-bold text-primary">
                 {formattedPrice}
               </span>
-              <span className="text-lg text-muted-foreground line-through">
+              <span className="text-[10px] md:text-lg text-muted-foreground line-through">
                 {new Intl.NumberFormat('es-MX', {
                   style: 'currency',
                   currency: 'MXN',
@@ -130,7 +130,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               </span>
             </>
           ) : (
-            <span className="text-2xl font-bold text-primary">
+            <span className="text-sm md:text-2xl font-bold text-primary">
               {formattedPrice}
             </span>
           )}
@@ -138,15 +138,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         {/* Nombre del descuento */}
         {product.has_discount && product.discount && (
-          <div className="mb-2">
-            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+          <div className="mb-1 md:mb-2">
+            <span className="text-[9px] md:text-xs font-medium text-red-600 dark:text-red-400 line-clamp-1">
               🎉 {product.discount.discount_name}
             </span>
           </div>
         )}
 
-        {/* Stock */}
-        <div className="flex items-center gap-2 text-sm">
+        {/* Stock - Solo en desktop */}
+        <div className="hidden md:flex items-center gap-2 text-sm mt-auto">
           {isOutOfStock ? (
             <span className="text-destructive font-medium">Sin stock</span>
           ) : product.stock < 10 ? (
@@ -159,19 +159,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 px-2 md:px-6 pb-2 md:pb-6 mt-auto">
         <Button 
-          className="w-full"
+          className="w-full h-8 md:h-10 text-xs md:text-sm"
           disabled={isOutOfStock || isAdding}
           variant={isOutOfStock ? "outline" : "default"}
           onClick={handleAddToCart}
         >
           {isAdding ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 animate-spin" />
           ) : (
-            <ShoppingCart className="h-4 w-4 mr-2" />
+            <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
           )}
-          {isOutOfStock ? 'No disponible' : isAdding ? 'Agregando...' : 'Agregar al carrito'}
+          <span className="hidden sm:inline">{isOutOfStock ? 'No disponible' : isAdding ? 'Agregando...' : 'Agregar al carrito'}</span>
+          <span className="sm:hidden">{isOutOfStock ? 'Agotado' : isAdding ? '...' : 'Agregar'}</span>
         </Button>
       </CardFooter>
     </Card>

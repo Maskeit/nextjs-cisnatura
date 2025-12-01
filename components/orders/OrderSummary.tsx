@@ -159,9 +159,9 @@ export default function OrderSummary() {
   const total: number = cart.total_amount + shippingCost;
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
+    <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
       {/* Columna izquierda - Productos y Dirección */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-4 md:space-y-6">
         {/* Dirección de Envío */}
         <Card>
             <CardHeader>
@@ -170,19 +170,19 @@ export default function OrderSummary() {
                 Dirección de Envío
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 md:p-6">
-              <div className="space-y-2">
-                <p className="font-medium">{address.full_name}</p>
-                <p className="text-sm text-muted-foreground">
+            <CardContent className="p-3 md:p-4 lg:p-6">
+              <div className="space-y-1 md:space-y-2">
+                <p className="font-medium text-sm md:text-base">{address.full_name}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {address.street}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {address.city}, {address.state}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {address.postal_code}, {address.country}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Tel: {address.phone}
                 </p>
                 {address.is_default && (
@@ -200,7 +200,7 @@ export default function OrderSummary() {
                 Productos ({cart.total_items})
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 md:p-6">
+            <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="space-y-2 md:space-y-4">
                 {cart.items.map((item) => {
                   const imageUrl = item.product.image_url
@@ -208,36 +208,36 @@ export default function OrderSummary() {
                     : '/placeholder.png';
                   
                   return (
-                    <div key={`cart-item-${item.id}`} className="flex gap-4 py-4 border-b last:border-b-0">
+                    <div key={`cart-item-${item.id}`} className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
                       <Link 
                         href={`/productos/${item.product.slug}`}
-                        className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted"
+                        className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted"
                       >
                         <Image
                           src={imageUrl}
                           alt={item.product.name}
                           fill
                           className="object-cover"
-                          sizes="80px"
+                          sizes="(max-width: 768px) 64px, 80px"
                           unoptimized={!!item.product.image_url}
                         />
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link 
                           href={`/productos/${item.product.slug}`}
-                          className="font-semibold hover:text-primary transition-colors line-clamp-2"
+                          className="font-semibold text-sm md:text-base hover:text-primary transition-colors line-clamp-2"
                         >
                           {item.product.name}
                         </Link>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                           ${item.product.price.toFixed(2)} c/u
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Cantidad: {item.quantity}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-primary">
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-bold text-base md:text-lg text-primary">
                           ${item.subtotal.toFixed(2)}
                         </p>
                       </div>
@@ -261,8 +261,8 @@ export default function OrderSummary() {
                 Detalles del total a pagar
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 p-4 md:p-6">
-              <div className="space-y-2">
+            <CardContent className="space-y-3 md:space-y-4 p-3 md:p-4 lg:p-6">
+              <div className="space-y-1.5 md:space-y-2">
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">${cart.total_amount.toFixed(2)}</span>
@@ -293,14 +293,14 @@ export default function OrderSummary() {
                 </div>
               </div>
 
-              <Alert>
-                <CreditCard className="h-4 w-4" />
-                <AlertDescription className="text-xs">
+              <Alert className="py-2">
+                <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
+                <AlertDescription className="text-[10px] md:text-xs">
                   El pago se procesará de forma segura a través de Mercado Pago
                 </AlertDescription>
               </Alert>
             </CardContent>
-            <CardFooter className="flex flex-col gap-3 p-4 md:p-6">
+            <CardFooter className="flex flex-col gap-2 md:gap-3 p-3 md:p-4 lg:p-6">
               <Button 
                 className="w-full text-sm md:text-base" 
                 size="lg"

@@ -17,9 +17,9 @@ import OrderSummarySkeleton from '@/components/orders/OrderSummarySkeleton';
 
 export default function ResumenPage() {
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-4 md:px-6 py-6 md:py-8">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <Link href="/carrito">
           <Button variant="ghost">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -46,8 +46,8 @@ export default function ResumenPage() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-zinc-400">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-zinc-400">
             Resumen de tu Orden
           </h1>
         </div>

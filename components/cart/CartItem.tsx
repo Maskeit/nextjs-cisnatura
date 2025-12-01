@@ -86,11 +86,11 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   };
 
   return (
-    <div className="flex gap-4 py-4 border-b last:border-b-0">
+    <div className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
       {/* Imagen del producto */}
       <Link 
         href={`/productos/${item.product.slug}`}
-        className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted"
+        className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted"
       >
         <Image
           src={imageUrl}
@@ -105,26 +105,27 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       {/* Información del producto */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-start gap-2 mb-1">
+          <div className="flex items-start gap-1 md:gap-2 mb-1">
             <Link 
               href={`/productos/${item.product.slug}`}
-              className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2 flex-1"
+              className="font-semibold text-sm md:text-lg hover:text-primary transition-colors line-clamp-2 flex-1"
             >
               {item.product.name}
             </Link>
             {item.product.has_discount && (
-              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 text-xs flex-shrink-0">
-                <Tag className="h-3 w-3 mr-1" />
-                Con descuento
+              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 text-[10px] md:text-xs flex-shrink-0 px-1 md:px-2">
+                <Tag className="h-2 w-2 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                <span className="hidden sm:inline">Con descuento</span>
+                <span className="sm:hidden">Desc.</span>
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm font-semibold text-foreground">
+          <div className="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
+            <p className="text-xs md:text-sm font-semibold text-foreground">
               {formattedPrice} c/u
             </p>
             {formattedOriginalPrice && (
-              <p className="text-xs text-muted-foreground line-through">
+              <p className="text-[10px] md:text-xs text-muted-foreground line-through">
                 {formattedOriginalPrice}
               </p>
             )}
@@ -138,17 +139,17 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
         {/* Controles de cantidad - Mobile */}
         <div className="flex items-center justify-between mt-2 md:hidden">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="icon"
               onClick={handleDecrement}
               disabled={isUpdating || isRemoving}
-              className="h-8 w-8"
+              className="h-7 w-7"
             >
               <Minus className="h-3 w-3" />
             </Button>
-            <span className="text-base font-semibold w-8 text-center">
+            <span className="text-sm font-semibold w-6 text-center">
               {item.quantity}
             </span>
             <Button
@@ -156,7 +157,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
               size="icon"
               onClick={handleIncrement}
               disabled={isUpdating || isRemoving || item.quantity >= item.product.stock}
-              className="h-8 w-8"
+              className="h-7 w-7"
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -164,15 +165,15 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
           <div className="text-right">
             {formattedSubtotalWithoutDiscount && (
-              <p className="text-xs text-muted-foreground line-through">
+              <p className="text-[10px] text-muted-foreground line-through">
                 {formattedSubtotalWithoutDiscount}
               </p>
             )}
-            <p className="font-bold text-lg text-primary">
+            <p className="font-bold text-base text-primary">
               {formattedSubtotal}
             </p>
             {item.discount_amount > 0 && (
-              <p className="text-xs text-green-600 dark:text-green-400">
+              <p className="text-[10px] text-green-600 dark:text-green-400">
                 Ahorro: {formatCurrency(item.discount_amount)}
               </p>
             )}
@@ -235,15 +236,15 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
       </div>
 
       {/* Botón eliminar - Mobile */}
-      <div className="md:hidden">
+      <div className="md:hidden flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleRemove}
           disabled={isRemoving || isUpdating}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 w-7"
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     </div>

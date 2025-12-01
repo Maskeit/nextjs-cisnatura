@@ -74,14 +74,14 @@ export default function Addresses({ onAddressSelect, selectedAddressId }: Addres
   const maxReached = total >= maxAddresses;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          <h2 className="text-2xl font-bold">Dirección de envío</h2>
+          <MapPin className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+          <h2 className="text-lg md:text-2xl font-bold">Dirección de envío</h2>
         </div>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-xs md:text-sm text-muted-foreground">
           {total} de {maxAddresses} direcciones guardadas
         </span>
       </div>
@@ -103,7 +103,7 @@ export default function Addresses({ onAddressSelect, selectedAddressId }: Addres
         <RadioGroup 
           value={selectedAddress?.toString()} 
           onValueChange={(value) => handleAddressSelect(parseInt(value))}
-          className="space-y-4"
+          className="space-y-3 md:space-y-4"
         >
           {addresses.map((address) => (
             <AddressCard
@@ -118,10 +118,10 @@ export default function Addresses({ onAddressSelect, selectedAddressId }: Addres
           ))}
         </RadioGroup>
       ) : (
-        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No tienes direcciones guardadas</h3>
-          <p className="text-muted-foreground mb-4">
+        <div className="text-center py-8 md:py-12 border-2 border-dashed rounded-lg">
+          <MapPin className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
+          <h3 className="text-base md:text-lg font-semibold mb-2">No tienes direcciones guardadas</h3>
+          <p className="text-sm md:text-base text-muted-foreground mb-4">
             Agrega tu primera dirección de envío
           </p>
         </div>

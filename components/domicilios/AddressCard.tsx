@@ -96,7 +96,7 @@ export default function AddressCard({
             : 'border hover:border-primary/50'
         }`}
       >
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 md:pt-6 px-3 md:px-6">
           <div className="flex items-start gap-3">
             {/* Radio button para selección */}
             {showRadio && onSelect && (
@@ -109,28 +109,29 @@ export default function AddressCard({
               </div>
             )}
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Header con label y badge */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 md:mb-3">
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <MapPin className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                   {address.label && (
-                    <h3 className="font-semibold text-lg">{address.label}</h3>
+                    <h3 className="font-semibold text-base md:text-lg truncate">{address.label}</h3>
                   )}
                   {address.is_default && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-current" />
-                      Predeterminada
+                    <Badge variant="secondary" className="flex items-center gap-0.5 md:gap-1 text-[10px] md:text-xs flex-shrink-0">
+                      <Star className="h-2.5 w-2.5 md:h-3 md:w-3 fill-current" />
+                      <span className="hidden sm:inline">Predeterminada</span>
+                      <span className="sm:hidden">Predet.</span>
                     </Badge>
                   )}
                 </div>
               </div>
 
               {/* Nombre completo */}
-              <p className="font-semibold text-base mb-1">{address.full_name}</p>
+              <p className="font-semibold text-sm md:text-base mb-1">{address.full_name}</p>
               
               {/* Teléfono y RFC */}
-              <div className="flex flex-wrap gap-3 mb-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap gap-2 md:gap-3 mb-1.5 md:mb-2 text-xs md:text-sm text-muted-foreground">
                 <span>📱 {address.phone}</span>
                 {address.rfc && (
                   <span className="font-mono">🧾 {address.rfc}</span>
@@ -138,7 +139,7 @@ export default function AddressCard({
               </div>
 
               {/* Dirección completa */}
-              <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="space-y-0.5 md:space-y-1 text-xs md:text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">{address.street}</p>
                 <p>
                   {address.city}, {address.state}
@@ -151,15 +152,16 @@ export default function AddressCard({
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-between pt-4 border-t bg-muted/30">
-          <div className="flex gap-2">
+        <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 pt-3 md:pt-4 border-t bg-muted/30 px-3 md:px-6">
+          <div className="flex flex-wrap gap-1.5 md:gap-2">
             {/* Botón de editar */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsEditDialogOpen(true)}
+              className="h-8 md:h-9 text-xs md:text-sm"
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
               Editar
             </Button>
 
@@ -170,9 +172,11 @@ export default function AddressCard({
                 size="sm"
                 onClick={handleSetDefault}
                 disabled={isSettingDefault}
+                className="h-8 md:h-9 text-xs md:text-sm"
               >
-                <Star className="h-4 w-4 mr-2" />
-                Predeterminada
+                <Star className="h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Predeterminada</span>
+                <span className="sm:hidden">Predet.</span>
               </Button>
             )}
           </div>
@@ -184,9 +188,10 @@ export default function AddressCard({
                 variant="ghost"
                 size="sm"
                 disabled={isDeleting}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 md:h-9 w-full sm:w-auto"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="ml-2 sm:hidden">Eliminar</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -217,7 +222,7 @@ export default function AddressCard({
 
       {/* Dialog de edición */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar dirección</DialogTitle>
             <DialogDescription>

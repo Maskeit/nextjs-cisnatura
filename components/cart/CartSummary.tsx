@@ -79,18 +79,18 @@ export default function CartSummary({
   };
 
   return (
-    <div className="bg-muted/30 rounded-lg p-4 md:p-6 space-y-4 lg:sticky lg:top-24">
-      <h2 className="text-xl md:text-2xl font-bold">Resumen del pedido</h2>
+    <div className="bg-muted/30 rounded-lg p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4 lg:sticky lg:top-24">
+      <h2 className="text-lg md:text-xl lg:text-2xl font-bold">Resumen del pedido</h2>
       
       <Separator />
 
       {/* Subtotal sin descuento (si aplica) */}
       {totalDiscount > 0 && totalWithoutDiscount && (
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-xs md:text-sm text-muted-foreground">
             Subtotal original
           </span>
-          <span className="text-sm text-muted-foreground line-through">
+          <span className="text-xs md:text-sm text-muted-foreground line-through">
             {formatCurrency(totalWithoutDiscount)}
           </span>
         </div>
@@ -98,33 +98,33 @@ export default function CartSummary({
 
       {/* Descuentos aplicados */}
       {totalDiscount > 0 && (
-        <div className="flex justify-between items-center">
-          <span className="text-sm md:text-base text-green-600 dark:text-green-400 font-medium">
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-xs md:text-sm lg:text-base text-green-600 dark:text-green-400 font-medium">
             Descuentos aplicados
           </span>
-          <span className="font-semibold text-base md:text-lg text-green-600 dark:text-green-400">
+          <span className="font-semibold text-sm md:text-base lg:text-lg text-green-600 dark:text-green-400">
             -{formatCurrency(totalDiscount)}
           </span>
         </div>
       )}
 
       {/* Subtotal */}
-      <div className="flex justify-between items-center">
-        <span className="text-sm md:text-base text-muted-foreground">
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-xs md:text-sm lg:text-base text-muted-foreground">
           Subtotal ({totalItems} {totalItems === 1 ? 'producto' : 'productos'})
         </span>
-        <span className="font-semibold text-base md:text-lg">
+        <span className="font-semibold text-sm md:text-base lg:text-lg">
           {formattedSubtotal}
         </span>
       </div>
 
       {/* Envío */}
-      <div className="flex justify-between items-center">
-        <span className="text-sm md:text-base text-muted-foreground flex items-center gap-2">
-          <Truck className="h-4 w-4" />
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-xs md:text-sm lg:text-base text-muted-foreground flex items-center gap-1 md:gap-2">
+          <Truck className="h-3 w-3 md:h-4 md:w-4" />
           Envío
         </span>
-        <span className={`font-semibold text-base md:text-lg ${shippingCost === 0 ? 'text-green-600' : ''}`}>
+        <span className={`font-semibold text-sm md:text-base lg:text-lg ${shippingCost === 0 ? 'text-green-600' : ''}`}>
           {loadingShipping ? 'Calculando...' : formattedShipping}
         </span>
       </div>
@@ -149,9 +149,9 @@ export default function CartSummary({
       <Separator />
 
       {/* Total */}
-      <div className="flex justify-between items-center">
-        <span className="text-lg md:text-xl font-bold">Total</span>
-        <span className="text-xl md:text-2xl font-bold text-primary">
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-base md:text-lg lg:text-xl font-bold">Total</span>
+        <span className="text-lg md:text-xl lg:text-2xl font-bold text-primary">
           {formattedTotal}
         </span>
       </div>
@@ -159,7 +159,7 @@ export default function CartSummary({
       {/* Botón de checkout */}
       <Button 
         size="lg" 
-        className="w-full text-base md:text-lg h-12 md:h-14"
+        className="w-full text-sm md:text-base lg:text-lg h-10 md:h-12 lg:h-14"
         onClick={handleCheckout}
         disabled={isLoading || totalItems === 0}
       >

@@ -33,9 +33,9 @@ export default function DomicilioPage() {
   };
 
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-4 md:px-6 py-6 md:py-8">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <Link href="/carrito">
           <Button variant="ghost">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -69,9 +69,9 @@ export default function DomicilioPage() {
         />
 
         {/* Botón de continuar */}
-        <div className="flex justify-between items-center mt-8 pt-6 border-t">
-          <Link href="/carrito">
-            <Button variant="outline">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-6 md:mt-8 pt-4 md:pt-6 border-t">
+          <Link href="/carrito" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al carrito
             </Button>
@@ -81,6 +81,7 @@ export default function DomicilioPage() {
             size="lg"
             onClick={handleContinue}
             disabled={!selectedAddressId}
+            className="w-full sm:w-auto"
           >
             Continuar al resumen
             <ArrowRight className="ml-2 h-4 w-4" />
