@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Información de la tienda */}
           <div>
-            <h3 className="text-xl font-bold mb-4 text-zinc-500">Cisnatura</h3>
+            <h3 className="text-xl font-bold mb-4 text-zinc-500">CISnatura</h3>
             <p className="text-sm">
               Productos naturales de alta calidad para tu bienestar y salud.
             </p>

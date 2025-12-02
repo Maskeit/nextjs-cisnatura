@@ -10,7 +10,6 @@ import CartController from '@/lib/CartController';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import ShippingPolicy from '@/components/products/ShippingPolicy';
 
 export default function ProductPage() {
   const params = useParams();
@@ -263,9 +262,6 @@ export default function ProductPage() {
               </div>
             </div>
           )}
-
-          {/* Política de envío */}
-          <ShippingPolicy />
 
           {/* Botón de agregar al carrito */}
           <div className="pt-4">

@@ -15,6 +15,8 @@ import {
 import OrderSummary from '@/components/orders/OrderSummary';
 import OrderSummarySkeleton from '@/components/orders/OrderSummarySkeleton';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
 export default function ResumenPage() {
   return (
     <div className="min-h-screen px-4 md:px-6 py-6 md:py-8">
@@ -52,6 +54,12 @@ export default function ResumenPage() {
           </h1>
         </div>
 
+
+        <Alert className='mb-5 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 flex flex-row items-start'>
+          <AlertDescription className="text-sm text-red-700 dark:text-red-300">
+            Esta pagina esta en desarrollo. La funcionalidad de realizar pedidos y pagar aún no está disponible.
+          </AlertDescription>
+        </Alert>
         <Suspense fallback={<OrderSummarySkeleton />}>
           <OrderSummary />
         </Suspense>

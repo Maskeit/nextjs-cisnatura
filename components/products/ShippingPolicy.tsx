@@ -37,9 +37,9 @@ export default function ShippingPolicy() {
   };
 
   return (
-    <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-      <Truck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-      <AlertDescription className="text-sm text-blue-700 dark:text-blue-300">
+    <Alert className="bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 flex flex-row items-start">
+      <Truck className="h-4 w-4 text-red-600 dark:text-red-400" />
+      <AlertDescription className="text-sm text-red-700 dark:text-red-300">
         <span className="font-medium">Envío: </span>
         {shippingInfo.free_shipping_threshold ? (
           <>
