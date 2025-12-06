@@ -6,6 +6,9 @@ import {
   OrderListAdmin,
   OrderStats,
   OrderResponse,
+  CreateOrderResponse,
+  CreatePaymentResponse,
+  CreatePaymentFromCartResponse,
   OrderAdminResponse,
   OrderListResponse,
   OrderListAdminResponse,
@@ -21,15 +24,83 @@ import {
 // ==================== USER ENDPOINTS ====================
 
 /**
- * POST /orders - Crear orden desde el carrito
- * Valida stock, crea orden, reduce inventario y limpia carrito
+ * POST /payments/create-from-cart - NUEVO FLUJO: Crear pago directamente desde carrito
+ * 
+ * FLUJO COMPLETO:
+ * 1. Usuario agrega productos: POST /cart/add { product_id, quantity }
+ * 2. Backend guarda en Redis por user_id (del JWT)
+ * 3. Usuario verifica carrito: GET /cart
+ * 4. Usuario crea pago: POST /payments/create-from-cart { address_id, payment_method }
+ * 5. Backend:
+ *    - Lee carrito Redis
+ *    - Valida stock y dirección
+ *    - Crea preferencia con items detallados
+ *    - NO crea orden todavía
+ *    - NO limpia carrito
+ * 6. Usuario paga en
+ * 7. Webhook recibe confirmación → /payments/webhook
+ * 8. Si payment_status == "approved":
+ *    - Crea la orden en PostgreSQL
+ *    - Reduce stock
+ *    - Limpia carrito Redis
+ * 
+ * ✅ Ventajas:
+ * - Precio correcto: Items detallados se envían a MP
+ * - Carrito intacto: Solo se limpia cuando webhook confirma pago
+ * - Orden solo si paga: Orden se crea después del pago confirmado
+ * - Una orden por pago: Verifica que no exista orden con ese payment_id
+ */
+export const createPaymentFromCart = async (
+  data: CreateOrderRequest
+): Promise<{
+  preference_id: string;
+  checkout_url: string;
+  sandbox_url: string;
+}> => {
+  const response = await api.post<CreatePaymentFromCartResponse>(
+    "/payments/create-from-cart",
+    data
+  );
+  return response.data.data;
+};
+
+/**
+ * POST /orders/ - Crear orden desde el carrito Redis (LEGACY)
+ * 
+ * ⚠️ DEPRECADO: Usar createPaymentFromCart en su lugar
+ * Este método crea la orden ANTES del pago, lo que puede causar:
+ * - Órdenes sin pago
+ * - Stock reducido sin confirmación
+ * - Carrito limpiado prematuramente
  */
 export const createOrder = async (
   data: CreateOrderRequest
 ): Promise<Order> => {
-  const response = await api.post<OrderResponse>("/orders/", data);
+  const response = await api.post<CreateOrderResponse>("/orders/", data);
   return response.data.data;
 };
+
+/**
+ * POST /payments/create/{order_id} - Crear pago con Mercado Pago (LEGACY)
+ * 
+ * ⚠️ DEPRECADO: Usar createPaymentFromCart en su lugar
+ * Genera la preferencia y retorna las URLs de checkout
+ */
+export const createPayment = async (
+  orderId: number
+): Promise<{
+  checkout_url: string;
+  sandbox_url: string;
+  payment_id: string;
+  amount: number;
+  currency: string;
+}> => {
+  const response = await api.post<CreatePaymentResponse>(
+    `/payments/create/${orderId}`
+  );
+  return response.data.data;
+};
+
 
 /**
  * GET /orders - Listar mis órdenes
@@ -208,8 +279,12 @@ export const formatDate = (date: string | null): string => {
 };
 
 export default {
-  // User methods
+  // User methods (NEW FLOW)
+  createPaymentFromCart,
+  
+  // User methods (LEGACY)
   createOrder,
+  createPayment,
   getOrders,
   getOrderById,
   cancelOrder,
