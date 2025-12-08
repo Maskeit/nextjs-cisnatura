@@ -82,20 +82,13 @@ export default function OrderSummary() {
       setCart(cartResponse.data);
       setAddress(addressResponse.data);
 
-      // Calcular costo de envío
-      try {
-        const shippingResponse = await CartController.calculateShipping(cartResponse.data.total_amount);
-        setShippingCalc(shippingResponse.data);
-      } catch (shippingErr) {
-        console.error('Error calculando envío:', shippingErr);
-        // Fallback si falla el cálculo
-        setShippingCalc({
-          shipping_price: 250,
-          order_total: cartResponse.data.total_amount,
-          free_shipping_threshold: null,
-          remaining_for_free_shipping: null,
-        });
-      }
+      // Usar shipping_cost que ya viene calculado del backend con categorías
+      setShippingCalc({
+        shipping_price: cartResponse.data.shipping_cost,
+        order_total: cartResponse.data.total_amount,
+        free_shipping_threshold: cartResponse.data.shipping_info?.threshold || null,
+        remaining_for_free_shipping: null,
+      });
 
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
@@ -295,7 +288,7 @@ export default function OrderSummary() {
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-muted-foreground">Envío</span>
                   <span className={`font-medium ${shippingCost === 0 ? 'text-green-600' : ''}`}>
-                    {shippingCost === 0 ? '¡Gratis! 🎉' : `$${shippingCost.toFixed(2)}`}
+                    {shippingCost === 0 ? '¡Gratis!' : `$${shippingCost.toFixed(2)}`}
                   </span>
                 </div>
                 {shippingCalc?.free_shipping_threshold && shippingCost === 0 && (

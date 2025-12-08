@@ -1,18 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, Truck } from 'lucide-react';
-import CartController from '@/lib/CartController';
-import type { ShippingCalculation } from '@/interfaces/Cart';
 
 interface CartSummaryProps {
   subtotal: number;
   totalItems: number;
   totalDiscount?: number;
   totalWithoutDiscount?: number;
+  shippingCost: number;
+  shippingMessage?: string;
+  freeShippingThreshold?: number | null;
   isLoading?: boolean;
 }
 
@@ -21,41 +21,12 @@ export default function CartSummary({
   totalItems, 
   totalDiscount = 0,
   totalWithoutDiscount,
+  shippingCost,
+  shippingMessage,
+  freeShippingThreshold,
   isLoading = false 
 }: CartSummaryProps) {
   const router = useRouter();
-  const [shippingCalc, setShippingCalc] = useState<ShippingCalculation | null>(null);
-  const [loadingShipping, setLoadingShipping] = useState(false);
-
-  useEffect(() => {
-    const fetchShippingCost = async () => {
-      if (subtotal <= 0) {
-        setShippingCalc(null);
-        return;
-      }
-
-      setLoadingShipping(true);
-      try {
-        const response = await CartController.calculateShipping(subtotal);
-        setShippingCalc(response.data);
-      } catch (error) {
-        console.error('Error calculating shipping:', error);
-        // Fallback a valores por defecto si falla
-        setShippingCalc({
-          shipping_price: 250,
-          order_total: subtotal,
-          free_shipping_threshold: null,
-          remaining_for_free_shipping: null,
-        });
-      } finally {
-        setLoadingShipping(false);
-      }
-    };
-
-    fetchShippingCost();
-  }, [subtotal]);
-
-  const shippingCost = shippingCalc?.shipping_price || 0;
   const total = subtotal + shippingCost;
 
   const formatCurrency = (amount: number) => {
@@ -69,10 +40,11 @@ export default function CartSummary({
   const formattedShipping = shippingCost === 0 ? 'Gratis' : formatCurrency(shippingCost);
   const formattedTotal = formatCurrency(total);
 
-  const showFreeShippingProgress = 
-    shippingCalc?.free_shipping_threshold && 
-    shippingCalc?.remaining_for_free_shipping && 
-    shippingCalc.remaining_for_free_shipping > 0;
+  const remainingForFreeShipping = freeShippingThreshold && subtotal < freeShippingThreshold 
+    ? freeShippingThreshold - subtotal 
+    : null;
+  
+  const showFreeShippingProgress = remainingForFreeShipping && remainingForFreeShipping > 0;
 
   const handleCheckout = () => {
     router.push('/domicilio');
@@ -125,23 +97,23 @@ export default function CartSummary({
           Envío
         </span>
         <span className={`font-semibold text-sm md:text-base lg:text-lg ${shippingCost === 0 ? 'text-green-600' : ''}`}>
-          {loadingShipping ? 'Calculando...' : formattedShipping}
+          {formattedShipping}
         </span>
       </div>
 
       {/* Progreso para envío gratis */}
-      {showFreeShippingProgress && (
-        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
-          <p className="text-xs md:text-sm text-green-700 dark:text-green-300 text-center">
-            🎉 ¡Agrega {formatCurrency(shippingCalc.remaining_for_free_shipping!)} más para obtener envío gratis!
+      {/* {showFreeShippingProgress && (
+        <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+          <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300 text-center">
+            ¡Agrega {formatCurrency(remainingForFreeShipping!)} más para obtener envío gratis!
           </p>
         </div>
-      )}
+      )} */}
 
-      {shippingCost === 0 && shippingCalc && (
+      {shippingCost === 0 && shippingMessage && (
         <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
           <p className="text-xs md:text-sm text-green-700 dark:text-green-300 text-center font-medium">
-            🎉 ¡Felicidades! Tienes envío gratis
+            {shippingMessage}
           </p>
         </div>
       )}
@@ -169,9 +141,9 @@ export default function CartSummary({
 
       {/* Información adicional */}
       <div className="space-y-2 pt-4">
-        {shippingCalc?.free_shipping_threshold && (
+        {freeShippingThreshold && (
           <p className="text-xs text-muted-foreground text-center">
-            Envío gratis en compras mayores a {formatCurrency(shippingCalc.free_shipping_threshold)}
+            Envío gratis en compras mayores a {formatCurrency(freeShippingThreshold)}
           </p>
         )}
         <p className="text-xs text-muted-foreground text-center">
