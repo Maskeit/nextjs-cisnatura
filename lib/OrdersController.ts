@@ -16,6 +16,7 @@ import {
   OrderDeleteResponse,
   CreateOrderRequest,
   UpdateOrderStatusRequest,
+  ShippingNotificationRequest,
   GetOrdersParams,
   GetAdminOrdersParams,
   OrderStatus,
@@ -189,6 +190,37 @@ export const deleteOrder = async (orderId: number): Promise<void> => {
   await api.delete<OrderDeleteResponse>(`/admin/orders/${orderId}`);
 };
 
+/**
+ * POST /admin/orders/{order_id}/notify-shipping - Notificar envío al cliente (admin)
+ * Envía correo con información de rastreo y guía PDF opcional
+ */
+export const sendShippingNotification = async (
+  orderId: number,
+  data: ShippingNotificationRequest
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('tracking_number', data.tracking_number);
+  formData.append('shipping_carrier', data.shipping_carrier);
+  
+  if (data.tracking_url) {
+    formData.append('tracking_url', data.tracking_url);
+  }
+  
+  if (data.admin_notes) {
+    formData.append('admin_notes', data.admin_notes);
+  }
+  
+  if (data.tracking_pdf) {
+    formData.append('tracking_pdf', data.tracking_pdf);
+  }
+  
+  await api.post(`/admin/orders/${orderId}/notify-shipping`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 // ==================== HELPER METHODS ====================
 
 /**
@@ -295,6 +327,7 @@ export default {
   updateOrderStatus,
   getOrderStats,
   deleteOrder,
+  sendShippingNotification,
 
   // Helpers
   canCancelOrder,

@@ -7,6 +7,7 @@ import {
   getAdminOrderById,
   updateOrderStatus,
   deleteOrder,
+  sendShippingNotification,
   getOrderStatusLabel,
   getOrderStatusColor,
   formatPrice,
@@ -75,11 +76,18 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showShippingDialog, setShowShippingDialog] = useState(false);
 
   // Form state para actualizar estado
   const [newStatus, setNewStatus] = useState<OrderStatus>(OrderStatus.PENDING);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  
+  // Form state para notificación de envío
+  const [shippingCarrier, setShippingCarrier] = useState('');
+  const [shippingUrl, setShippingUrl] = useState('');
+  const [shippingNotes, setShippingNotes] = useState('');
+  const [trackingPdf, setTrackingPdf] = useState<File | null>(null);
 
   const fetchOrder = async () => {
     setIsLoading(true);
@@ -132,6 +140,33 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     } catch (error) {
       console.error('Error al eliminar orden:', error);
       toast.error('Error al eliminar la orden');
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSendShippingNotification = async () => {
+    if (!order || !trackingNumber || !shippingCarrier) {
+      toast.error('Completa los campos requeridos');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await sendShippingNotification(orderId, {
+        tracking_number: trackingNumber,
+        shipping_carrier: shippingCarrier,
+        tracking_url: shippingUrl || undefined,
+        admin_notes: shippingNotes || undefined,
+        tracking_pdf: trackingPdf || undefined,
+      });
+
+      toast.success('Notificación de envío enviada al cliente');
+      setShowShippingDialog(false);
+      fetchOrder();
+    } catch (error) {
+      console.error('Error al enviar notificación:', error);
+      toast.error('Error al enviar la notificación');
+    } finally {
       setIsUpdating(false);
     }
   };
@@ -189,6 +224,21 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           <Button onClick={() => setShowStatusDialog(true)}>
             Actualizar Estado
           </Button>
+          {order.payment_status === 'paid' && order.status !== OrderStatus.DELIVERED && (
+            <Button 
+              variant="secondary" 
+              onClick={() => {
+                setTrackingNumber(order.tracking_number || '');
+                setShippingCarrier('');
+                setShippingUrl('');
+                setShippingNotes('');
+                setTrackingPdf(null);
+                setShowShippingDialog(true);
+              }}
+            >
+              Notificar Envío
+            </Button>
+          )}
           <Button
             variant="destructive"
             size="icon"
@@ -508,6 +558,113 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog para notificar envío */}
+      <Dialog open={showShippingDialog} onOpenChange={setShowShippingDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Notificar Envío al Cliente</DialogTitle>
+            <DialogDescription>
+              Envía un correo al cliente con la información de rastreo y guía PDF (opcional)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="shipping-tracking">Número de Guía *</Label>
+              <Input
+                id="shipping-tracking"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder="FDX1234567890"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="shipping-carrier">Paquetería *</Label>
+              <Input
+                id="shipping-carrier"
+                value={shippingCarrier}
+                onChange={(e) => setShippingCarrier(e.target.value)}
+                placeholder="FedEx, DHL, Estafeta, etc."
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="shipping-url">URL de Rastreo (opcional)</Label>
+              <Input
+                id="shipping-url"
+                value={shippingUrl}
+                onChange={(e) => setShippingUrl(e.target.value)}
+                placeholder="https://..."
+                type="url"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="shipping-notes">Mensaje para el Cliente (opcional)</Label>
+              <Textarea
+                id="shipping-notes"
+                value={shippingNotes}
+                onChange={(e) => setShippingNotes(e.target.value)}
+                placeholder="Ej: Tu paquete llegará en 3-5 días hábiles..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="shipping-pdf">Adjuntar Guía PDF (opcional)</Label>
+              <Input
+                id="shipping-pdf"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.type !== 'application/pdf') {
+                      toast.error('Solo se permiten archivos PDF');
+                      e.target.value = '';
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error('El archivo no debe superar 5MB');
+                      e.target.value = '';
+                      return;
+                    }
+                    setTrackingPdf(file);
+                  }
+                }}
+              />
+              {trackingPdf && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  📎 {trackingPdf.name} ({(trackingPdf.size / 1024).toFixed(2)} KB)
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Máximo 5MB. El PDF se adjuntará al correo del cliente.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowShippingDialog(false)}
+              disabled={isUpdating}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSendShippingNotification} 
+              disabled={isUpdating || !trackingNumber || !shippingCarrier}
+            >
+              {isUpdating ? 'Enviando...' : 'Enviar Notificación'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

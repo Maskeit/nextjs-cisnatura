@@ -204,6 +204,14 @@ export interface UpdateOrderStatusRequest {
   tracking_number?: string;
 }
 
+export interface ShippingNotificationRequest {
+  tracking_number: string;
+  shipping_carrier: string;
+  tracking_url?: string;
+  admin_notes?: string;
+  tracking_pdf?: File;
+}
+
 // ==================== QUERY PARAMS ====================
 export interface GetOrdersParams {
   skip?: number;
