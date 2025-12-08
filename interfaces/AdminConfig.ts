@@ -27,6 +27,7 @@ export interface AdminSettings {
   maintenance_message: string | null;
   shipping_price: number;
   free_shipping_threshold: number | null;
+  categories_no_shipping: number[];
   global_discount_enabled: boolean;
   global_discount_percentage: number;
   global_discount_name: string | null;
@@ -49,6 +50,10 @@ export interface UpdateMaintenanceRequest {
 export interface UpdateShippingRequest {
   shipping_price: number;
   free_shipping_threshold?: number | null;
+}
+
+export interface UpdateCategoriesNoShippingRequest {
+  category_ids: number[];
 }
 
 export interface UpdateGlobalDiscountRequest {

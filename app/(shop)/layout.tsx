@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/components/SessionProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CookieConsent from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Cisnatura - Productos Naturales",
@@ -24,6 +25,7 @@ export default function ShopLayout({
         </main>
         <Toaster />
         <Footer />
+        <CookieConsent />
       </SessionProvider>
     </ThemeProvider>
   );

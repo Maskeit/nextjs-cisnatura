@@ -47,6 +47,14 @@ export interface Cart {
   total_amount: number;
   total_discount: number;
   total_without_discount: number;
+  shipping_cost: number;
+  grand_total: number;
+  shipping_info: {
+    shipping_price: number;
+    is_free: boolean;
+    threshold: number | null;
+    message: string;
+  };
   created_at?: string | null;
 }
 

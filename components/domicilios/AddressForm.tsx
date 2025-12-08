@@ -209,7 +209,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
             name="street"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Calle y número *</FormLabel>
+                <FormLabel>Colonia, Calle y número *</FormLabel>
                 <FormControl>
                   <Input placeholder="Av. Principal 123, Col. Centro" {...field} />
                 </FormControl>
@@ -357,7 +357,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar nueva dirección</DialogTitle>
+          <DialogTitle>Agregar nueva dirección (Solo envíos en México)</DialogTitle>
           <DialogDescription>
             Completa los datos de tu dirección de envío. Puedes guardar hasta 3 direcciones.
           </DialogDescription>
@@ -438,7 +438,7 @@ export default function AddressForm({ onSuccess, editAddress, maxReached }: Addr
               name="street"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Calle y número *</FormLabel>
+                  <FormLabel>Colonia, Calle y número *</FormLabel>
                   <FormControl>
                     <Input placeholder="Av. Principal 123, Col. Centro" {...field} />
                   </FormControl>

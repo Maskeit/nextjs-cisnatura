@@ -32,6 +32,11 @@ export default function Footer() {
                   Mi Cuenta
                 </Link>
               </li>
+                <li>
+                <a href="/advice.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  Aviso de privacidad
+                </a>
+                </li>
             </ul>
           </div>
 

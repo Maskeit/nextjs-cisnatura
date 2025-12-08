@@ -3,6 +3,7 @@ import {
   AdminSettings,
   UpdateMaintenanceRequest,
   UpdateShippingRequest,
+  UpdateCategoriesNoShippingRequest,
   UpdateGlobalDiscountRequest,
   AddCategoryDiscountRequest,
   AddProductDiscountRequest,
@@ -164,6 +165,21 @@ class AdminConfigController {
   async updateShipping(data: UpdateShippingRequest): Promise<ShippingResponse> {
     const response = await api.put<ShippingResponse>(
       `${this.BASE_PATH}/shipping`,
+      data
+    );
+    return response.data;
+  }
+
+  /**
+   * Actualizar categorías que no pagan envío (productos digitales)
+   * @param data - IDs de categorías sin costo de envío
+   * @returns Promise con la respuesta de categorías actualizadas
+   */
+  async updateCategoriesNoShipping(
+    data: UpdateCategoriesNoShippingRequest
+  ): Promise<{ success: boolean; message: string; data: { categories_no_shipping: number[] } }> {
+    const response = await api.put(
+      `${this.BASE_PATH}/shipping/no-shipping-categories`,
       data
     );
     return response.data;

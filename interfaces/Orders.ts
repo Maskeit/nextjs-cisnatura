@@ -15,7 +15,6 @@ export enum OrderStatus {
 export enum PaymentMethod {
   STRIPE = "stripe",
   PAYPAL = "paypal",
-  MERCADOPAGO = "mercadopago",
   OPENPAY = "openpay",
   CASH = "cash",
   TRANSFER = "transfer",
@@ -125,6 +124,37 @@ export interface OrderResponse {
   data: Order;
 }
 
+export interface CreateOrderResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: Order;
+}
+
+export interface CreatePaymentResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    checkout_url: string;
+    sandbox_url: string;
+    payment_id: string;
+    amount: number;
+    currency: string;
+  };
+}
+
+export interface CreatePaymentFromCartResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    preference_id: string;
+    checkout_url: string;
+    sandbox_url: string;
+  };
+}
+
 export interface OrderAdminResponse {
   success: boolean;
   status_code: number;
@@ -165,12 +195,21 @@ export interface CreateOrderRequest {
   address_id: number;
   payment_method?: string;
   notes?: string;
+  shipping_cost?: number;  // Costo de envío calculado por el frontend
 }
 
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
   admin_notes?: string;
   tracking_number?: string;
+}
+
+export interface ShippingNotificationRequest {
+  tracking_number: string;
+  shipping_carrier: string;
+  tracking_url?: string;
+  admin_notes?: string;
+  tracking_pdf?: File;
 }
 
 // ==================== QUERY PARAMS ====================

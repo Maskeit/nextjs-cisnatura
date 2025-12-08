@@ -239,6 +239,9 @@ export default function CarritoPage() {
                 totalItems={cart.total_items}
                 totalDiscount={cart.total_discount}
                 totalWithoutDiscount={cart.total_without_discount}
+                shippingCost={cart.shipping_cost}
+                shippingMessage={cart.shipping_info?.message}
+                freeShippingThreshold={cart.shipping_info?.threshold}
                 isLoading={isLoading}
               />
             </div>

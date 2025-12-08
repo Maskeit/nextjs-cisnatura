@@ -31,7 +31,6 @@
 
 - **Stripe** (stripe)
 - **PayPal** (paypal)
-- **MercadoPago** (mercadopago)
 - **OpenPay** (openpay)
 - **Efectivo** (cash) - Solo admin
 - **Transferencia** (transfer) - Solo admin

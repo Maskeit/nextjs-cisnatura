@@ -3,19 +3,36 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Loader2, MapPin, Package, CreditCard, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import CartController from '@/lib/CartController';
 import AddressController from '@/lib/AddressController';
-import OrdersController from '@/lib/OrdersController';
+import PaymentController from '@/lib/PaymentController';
 import { Cart, ShippingCalculation } from '@/interfaces/Cart';
 import { Address } from '@/interfaces/Address';
+import { PaymentProvider } from '@/interfaces/Payment';
 import Image from 'next/image';
+
+// Importar StripeCheckoutForm dinámicamente para evitar SSR issues
+const StripeCheckoutForm = dynamic(
+  () => import('@/components/payments/StripeCheckoutForm'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+);
 
 export default function OrderSummary() {
   const router = useRouter();
@@ -23,8 +40,11 @@ export default function OrderSummary() {
   const [address, setAddress] = useState<Address | null>(null);
   const [shippingCalc, setShippingCalc] = useState<ShippingCalculation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estado de método de pago
+  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe');
+  const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,20 +82,13 @@ export default function OrderSummary() {
       setCart(cartResponse.data);
       setAddress(addressResponse.data);
 
-      // Calcular costo de envío
-      try {
-        const shippingResponse = await CartController.calculateShipping(cartResponse.data.total_amount);
-        setShippingCalc(shippingResponse.data);
-      } catch (shippingErr) {
-        console.error('Error calculando envío:', shippingErr);
-        // Fallback si falla el cálculo
-        setShippingCalc({
-          shipping_price: 250,
-          order_total: cartResponse.data.total_amount,
-          free_shipping_threshold: null,
-          remaining_for_free_shipping: null,
-        });
-      }
+      // Usar shipping_cost que ya viene calculado del backend con categorías
+      setShippingCalc({
+        shipping_price: cartResponse.data.shipping_cost,
+        order_total: cartResponse.data.total_amount,
+        free_shipping_threshold: cartResponse.data.shipping_info?.threshold || null,
+        remaining_for_free_shipping: null,
+      });
 
     } catch (err: any) {
       console.error('Error al cargar datos:', err);
@@ -85,41 +98,22 @@ export default function OrderSummary() {
     }
   };
 
-  const handleCreateOrder = async () => {
+  const handleProceedToPayment = () => {
     if (!address) {
       toast.error('No hay dirección de envío seleccionada');
       return;
     }
 
-    setIsCreatingOrder(true);
+    if (!cart) {
+      toast.error('El carrito está vacío');
+      return;
+    }
 
-    try {
-      // Crear la orden
-      const order = await OrdersController.createOrder({
-        address_id: address.id,
-        payment_method: 'mercadopago', // Por defecto Mercado Pago
-        notes: undefined
-      });
-
-      toast.success('¡Orden creada exitosamente!');
-      
-      // Guardar ID de orden para la página de confirmación
-      localStorage.setItem('last_order_id', order.id.toString());
-      
-      // Limpiar dirección seleccionada
-      localStorage.removeItem('selected_address_id');
-
-      // Aquí iría la integración con Mercado Pago
-      // Por ahora, redirigir directamente a confirmación
-      router.push('/checkout/confirmacion');
-
-    } catch (err: any) {
-      console.error('Error al crear orden:', err);
-      const errorMessage = err.response?.data?.message || 'Error al crear la orden';
-      toast.error(errorMessage);
-      setError(errorMessage);
-    } finally {
-      setIsCreatingOrder(false);
+    if (paymentMethod === 'stripe') {
+      // Mostrar el checkout embebido de Stripe
+      setShowCheckout(true);
+    } else {
+      toast.error('Método de pago no disponible');
     }
   };
 
@@ -157,6 +151,30 @@ export default function OrderSummary() {
 
   const shippingCost: number = shippingCalc?.shipping_price || 0;  
   const total: number = cart.total_amount + shippingCost;
+
+  // Si ya se mostró el checkout, renderizar solo el checkout
+  if (showCheckout) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-4">
+          <Button variant="ghost" onClick={() => setShowCheckout(false)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver al resumen
+          </Button>
+        </div>
+        
+        <StripeCheckoutForm
+          addressId={address.id}
+          shippingCost={shippingCost}
+          onError={(error) => {
+            console.error('Error en checkout:', error);
+            toast.error('Error al cargar el checkout. Por favor intenta nuevamente.');
+            setShowCheckout(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
@@ -270,7 +288,7 @@ export default function OrderSummary() {
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-muted-foreground">Envío</span>
                   <span className={`font-medium ${shippingCost === 0 ? 'text-green-600' : ''}`}>
-                    {shippingCost === 0 ? '¡Gratis! 🎉' : `$${shippingCost.toFixed(2)}`}
+                    {shippingCost === 0 ? '¡Gratis!' : `$${shippingCost.toFixed(2)}`}
                   </span>
                 </div>
                 {shippingCalc?.free_shipping_threshold && shippingCost === 0 && (
@@ -280,10 +298,7 @@ export default function OrderSummary() {
                     </p>
                   </div>
                 )}
-                {/* <div className="flex justify-between text-xs md:text-sm">
-                  <span className="text-muted-foreground">IVA (16%)</span>
-                  <span className="font-medium">${tax.toFixed(2)}</span>
-                </div> */}
+
                 <Separator />
                 <div className="flex justify-between">
                   <span className="text-base md:text-lg font-semibold">Total</span>
@@ -293,10 +308,39 @@ export default function OrderSummary() {
                 </div>
               </div>
 
+              {/* Selector de método de pago */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Método de pago</Label>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentProvider)}>
+                  {PaymentController.getAvailablePaymentMethods().map((method) => (
+                    <div
+                      key={method.id}
+                      className={`flex items-center space-x-3 rounded-lg border p-3 md:p-4 transition-colors ${
+                        !method.enabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-accent'
+                      } ${paymentMethod === method.id ? 'border-primary bg-accent' : ''}`}
+                    >
+                      <RadioGroupItem value={method.id} id={method.id} disabled={!method.enabled} />
+                      <Label
+                        htmlFor={method.id}
+                        className={`flex-1 ${!method.enabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{method.icon}</span>
+                          <div>
+                            <p className="text-sm font-medium">{method.name}</p>
+                            <p className="text-xs text-muted-foreground">{method.description}</p>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+
               <Alert className="py-2">
                 <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
                 <AlertDescription className="text-[10px] md:text-xs">
-                  El pago se procesará de forma segura a través de Mercado Pago
+                  El pago se procesará de forma segura con encriptación SSL
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -304,29 +348,18 @@ export default function OrderSummary() {
               <Button 
                 className="w-full text-sm md:text-base" 
                 size="lg"
-                onClick={handleCreateOrder}
-                disabled={isCreatingOrder}
+                onClick={handleProceedToPayment}
               >
-                {isCreatingOrder ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Pagar con Mercado Pago
-                  </>
-                )}
+                <CreditCard className="mr-2 h-4 w-4" />
+                Proceder al pago
               </Button>
               <Button 
                 variant="outline" 
                 className="w-full text-sm md:text-base"
                 onClick={() => router.push('/carrito')}
-                disabled={isCreatingOrder}
               >
                 Volver al carrito
-            </Button>
+              </Button>
           </CardFooter>
         </Card>
       </div>
