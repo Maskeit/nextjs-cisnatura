@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import { cookieStorage } from '@/lib/cookies';
-import { UserRegister, UserLogin, UserResponse, LoginResponse, RegisterResponse, VerifyEmailResponse, ResendVerificationResponse } from '@/interfaces/User';
+import { UserRegister, UserLogin, UserResponse, LoginResponse, RegisterResponse, VerifyEmailResponse, ResendVerificationResponse, UserRecoverPassowordRequest, VerifyEmailResetResponse, UserRestePasswordResponse } from '@/interfaces/User';
 
 export const AuthAPI = {
     // Registro y Verificación
@@ -45,6 +45,23 @@ export const AuthAPI = {
         return response.data;
     },
 
+    // =============== SOLICITA RECUPERAR CUENTA ===============
+    // solicitar cambio de contrasena
+    async recoverPassword(data: { email: string }): Promise<UserRecoverPassowordRequest> {
+        const response = await api.post('/auth/recover-password', data);
+        return response.data
+    },
+    //verificar el email con token valido
+    async verifyEmailRecover(data: { token: string }): Promise<VerifyEmailResetResponse> {
+        const response = await api.post('/auth/validate-email-reset', data)
+        return response.data;
+    },
+    //form para cambiar la contrasena
+    async resetPassword(data: { token: string, new_password: string }): Promise<UserRestePasswordResponse> {
+        const response = await api.post('/auth/reset-password', data);
+        return response.data;
+    },
+
     // Helpers para tokens
     setAuthToken(token: string) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -65,7 +82,7 @@ export const AuthAPI = {
             // Limpiar tokens de las cookies y axios siempre
             this.removeAuthToken();
             cookieStorage.clearAuth();
-            
+
             // Limpiar localStorage relacionado con checkout/carrito
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('selected_address_id');

@@ -223,7 +223,7 @@ export default function ProductPage() {
             <h2 className="text-2xl font-semibold text-foreground mb-3">
               Descripción
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {product.description || 'No hay descripción disponible para este producto.'}
             </p>
           </div>

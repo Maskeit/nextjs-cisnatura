@@ -155,6 +155,25 @@ export interface UserDeleteResponse {
     message: string;
 }
 
+//====== RECUPERAR CONTRASENA PASOS ============
+// Primero solicitar cambio con email de verificacion
+export interface UserRecoverPassowordRequest {
+    success: boolean;
+    status_code: number;
+    message: string;
+}
+export interface VerifyEmailResetResponse {
+    success: boolean;
+    message: string;
+    data: {
+        email: string;
+    };
+}
+export interface UserRestePasswordResponse {
+    success: boolean;
+    status_code: number;
+    message: string;
+}
 // ==================== ADMIN USER TYPES ====================
 
 export interface UserAdminDetails extends UserResponse {
@@ -280,4 +299,5 @@ export type UserErrorCode =
     | "CANNOT_DELETE_ADMIN"
     | "CANNOT_DELETE_SELF"
     | "USER_NOT_FOUND"
+    | "EMAIL_NOT_EXISTS"
     | "VALIDATION_ERROR";
