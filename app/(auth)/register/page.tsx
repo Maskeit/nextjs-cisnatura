@@ -9,7 +9,6 @@ import { cookieStorage } from "@/lib/cookies";
 import { UserRegister } from "@/interfaces/User";
 import { loginWithGoogle, signOutFirebase } from "@/lib/Firebase";
 import { ArrowBigLeftDashIcon } from "lucide-react"
-import Image from "next/image";
 
 export default function RegisterPage() {
   const router = useRouter();

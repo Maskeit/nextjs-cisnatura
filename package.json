@@ -1,18 +1,12 @@
 {
   "name": "nextjs-cisnatura",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:stop": "pm2 stop nextjs-cisnatura",
-    "pm2:restart": "pm2 restart nextjs-cisnatura",
-    "pm2:delete": "pm2 delete nextjs-cisnatura",
-    "pm2:logs": "pm2 logs nextjs-cisnatura",
-    "pm2:monit": "pm2 monit",
     "deploy": "npm run build && pm2 restart ecosystem.config.js --update-env"
   },
   "dependencies": {
@@ -43,10 +37,10 @@
     "firebase": "^12.6.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.553.0",
-    "next": "16.0.3",
+    "next": "16.0.10",
     "next-themes": "^0.4.6",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-hook-form": "^7.66.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
