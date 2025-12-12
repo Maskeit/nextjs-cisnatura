@@ -58,7 +58,6 @@ import {
   CreditCard,
   Calendar,
   Truck,
-  CheckCircle2,
   XCircle,
   Trash2,
   ArrowLeft,

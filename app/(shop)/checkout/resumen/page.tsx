@@ -15,7 +15,6 @@ import {
 import OrderSummary from '@/components/orders/OrderSummary';
 import OrderSummarySkeleton from '@/components/orders/OrderSummarySkeleton';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ResumenPage() {
   return (

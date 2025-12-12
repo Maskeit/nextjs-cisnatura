@@ -13,6 +13,33 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Strict TypeScript rules
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-empty-function": "warn",
+      
+      // React hooks rules
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/set-state-in-effect": "error",
+      
+      // Next.js rules
+      "@next/next/no-html-link-for-pages": "error",
+      
+      // General rules
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "prefer-const": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
