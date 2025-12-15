@@ -35,9 +35,19 @@ import {
 import { Product, UpdateProductRequest, Category } from '@/interfaces/Products';
 import ProductController from '@/lib/ProductController';
 import { toast } from 'sonner';
-import { Loader2, ImageIcon } from 'lucide-react';
+import { Loader2, ImageIcon, Trash2 } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
 import Image from 'next/image';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const productSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -63,6 +73,8 @@ export const ProductEdit = ({ product, open, onOpenChange, onProductUpdated }: P
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
+  const [isHardDeleteDialogOpen, setIsHardDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Cargar categorías al abrir el dialog
   useEffect(() => {
@@ -78,6 +90,36 @@ export const ProductEdit = ({ product, open, onOpenChange, onProductUpdated }: P
     } catch (error) {
       console.error('Error al cargar categorías:', error);
       toast.error('Error al cargar las categorías');
+    }
+  };
+
+  const handleHardDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await ProductController.adminDelete(product.id);
+      toast.success('Producto eliminado permanentemente');
+      setIsHardDeleteDialogOpen(false);
+      onOpenChange(false);
+      if (onProductUpdated) onProductUpdated();
+    } catch (error: any) {
+      console.error('Error al eliminar producto:', error);
+      
+      let errorMessage = 'Error al eliminar el producto';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.detail) {
+        const errorDetail = error.response.data.detail;
+        if (typeof errorDetail === 'object' && errorDetail.message) {
+          errorMessage = errorDetail.message;
+        } else if (typeof errorDetail === 'string') {
+          errorMessage = errorDetail;
+        }
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -377,19 +419,32 @@ export const ProductEdit = ({ product, open, onOpenChange, onProductUpdated }: P
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
+                variant="destructive"
+                onClick={() => setIsHardDeleteDialogOpen(true)}
                 disabled={isLoading}
+                className="w-full sm:w-auto sm:mr-auto"
               >
-                Cancelar
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Guardar Cambios
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                  className="flex-1 sm:flex-initial"
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading} className="flex-1 sm:flex-initial">
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Guardar Cambios
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
@@ -405,6 +460,49 @@ export const ProductEdit = ({ product, open, onOpenChange, onProductUpdated }: P
           toast.success('Imagen actualizada. Recuerda guardar los cambios.');
         }}
       />
+
+      {/* Dialog de confirmación de eliminación permanente */}
+      <AlertDialog open={isHardDeleteDialogOpen} onOpenChange={setIsHardDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              ⚠️ ¿Eliminar producto permanentemente?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <div className="font-semibold text-foreground">
+                Esta acción es IRREVERSIBLE y eliminará:
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>El registro del producto de la base de datos</li>
+                <li>La imagen asociada del servidor</li>
+                <li>Toda la información relacionada</li>
+              </ul>
+              <div className="text-destructive font-medium">
+                Producto: "<strong>{product.name}</strong>"
+              </div>
+              <div className="text-sm text-muted-foreground">
+                💡 Recomendación: En lugar de eliminar, considera desactivar el producto 
+                usando el switch "Producto Activo" arriba.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleHardDelete();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Eliminando...' : 'Sí, Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

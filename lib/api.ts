@@ -34,8 +34,31 @@ function handleSessionExpired() {
     const currentPath = window.location.pathname;
     const loginUrl = `/login?redirect=${encodeURIComponent(currentPath)}&session_expired=true`;
     window.location.href = loginUrl;
+    
+    // Resetear flag después de un momento
+    setTimeout(() => {
+      isRedirecting = false;
+    }, 1000);
   }
 }
+
+// Interceptor de request para asegurar que el token esté configurado
+api.interceptors.request.use(
+  (config) => {
+    // Si no hay token en el header pero sí en cookies, configurarlo
+    if (!config.headers.Authorization && typeof window !== 'undefined') {
+      // Obtener token de las cookies
+      const tokenMatch = document.cookie.match(/access_token=([^;]+)/);
+      const token = tokenMatch ? tokenMatch[1] : null;
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Interceptor para manejar errores y extraer el contenido de 'detail'
 api.interceptors.response.use(
@@ -49,13 +72,17 @@ api.interceptors.response.use(
     
     // Manejar errores 401 (No autorizado / Token inválido o expirado)
     if (error.response?.status === 401) {
-      // Verificar que no sea una llamada a /auth/login o /auth/register
-      const isAuthEndpoint = error.config?.url?.includes('/auth/login') || 
-                            error.config?.url?.includes('/auth/register') ||
-                            error.config?.url?.includes('/auth/verify-email') ||
-                            error.config?.url?.includes('/auth/google-login');
+      // Verificar que no sea una llamada a endpoints públicos o de auth
+      const url = error.config?.url || '';
+      const isPublicEndpoint = url.includes('/auth/') || 
+                              url.includes('/products/') ||
+                              url.includes('/categories/');
       
-      if (!isAuthEndpoint) {
+      // Solo redirigir si estamos en una página protegida Y tenemos cookies de sesión
+      const hasSessionCookies = typeof window !== 'undefined' && 
+                               document.cookie.includes('access_token');
+      
+      if (!isPublicEndpoint && hasSessionCookies) {
         // Token inválido o expirado - cerrar sesión automáticamente
         console.warn('Sesión expirada o token inválido. Cerrando sesión...');
         handleSessionExpired();

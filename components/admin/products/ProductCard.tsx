@@ -159,10 +159,19 @@ export default function ProductCard({ product, onProductUpdated }: ProductCardPr
     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta acción desactivará el producto "<strong>{product.name}</strong>". 
-            El producto ya no será visible en la tienda.
+          <AlertDialogTitle className="text-destructive">⚠️ ¿Eliminar producto permanentemente?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <div className="font-semibold text-foreground">
+              Esta acción es IRREVERSIBLE y eliminará:
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>El registro del producto de la base de datos</li>
+              <li>La imagen asociada del servidor</li>
+              <li>Toda la información relacionada</li>
+            </ul>
+            <div className="text-destructive font-medium">
+              Producto: "<strong>{product.name}</strong>"
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -175,7 +184,7 @@ export default function ProductCard({ product, onProductUpdated }: ProductCardPr
             disabled={isDeleting}
             className="bg-destructive hover:bg-destructive/90"
           >
-            {isDeleting ? 'Eliminando...' : 'Eliminar'}
+            {isDeleting ? 'Eliminando...' : 'Sí, Eliminar Permanentemente'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

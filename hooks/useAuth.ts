@@ -17,6 +17,16 @@ export function useAuth() {
     checkAuth();
   }, []);
 
+  // Reinicializar el token en axios cada vez que se detecte que hay cookies
+  useEffect(() => {
+    if (user) {
+      const token = cookieStorage.getAccessToken();
+      if (token) {
+        AuthAPI.setAuthToken(token);
+      }
+    }
+  }, [user]);
+
   const checkAuth = () => {
     try {
       const currentUser = AuthAPI.getCurrentUser();
@@ -37,7 +47,8 @@ export function useAuth() {
       await AuthAPI.logoutAndClear();
       setUser(null);
       toast.success('Sesión cerrada exitosamente');
-      router.push('/login');
+      // Forzar recarga de la página para limpiar todo el estado
+      window.location.href = '/';
     } catch (error) {
       console.error('Error during logout:', error);
       toast.error('Error al cerrar sesión');
