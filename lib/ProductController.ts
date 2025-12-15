@@ -10,11 +10,11 @@ import {
   UpdateProductResponse,
   DeleteProductResponse,
   CategoryListResponse,
-  Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
   CategoryResponse,
-  UploadImageResponse
+  UploadImageResponse,
+  DesactivateProductResponse
 } from "@/interfaces/Products";
 
 interface ProductFilters {
@@ -183,10 +183,20 @@ class ProductController {
    * @param productId - ID del producto a eliminar
    * @returns Promise con la respuesta de eliminación
    */
-  static adminDelete = async (productId: number): Promise<DeleteProductResponse> => {
+  static adminDesactivate = async (productId: number): Promise<DesactivateProductResponse> => {
     const response = await api.delete(`/products/${productId}`);
     return response.data;
   };
+
+  /**
+   * Eliminar un producto permanente - hard delete
+   * @param force bool default: false Ejemplo: ?force=true
+   * @returns Promise con la respuesta de eliminacion
+   */
+  static adminDelete = async (productId: number): Promise<DeleteProductResponse> => {
+    const response = await api.delete(`/products/admin/${productId}/permanent`)
+    return response.data;
+  }
 
   // ==================== CATEGORY METHODS ====================
 

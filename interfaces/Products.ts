@@ -149,8 +149,8 @@ export interface UpdateProductResponse {
   data: AdminProduct;
 }
 
-// Eliminar producto
-export interface DeleteProductResponse {
+// Desactivar producto
+export interface DesactivateProductResponse{
   success: boolean;
   status_code: number;
   message: string;
@@ -158,6 +158,17 @@ export interface DeleteProductResponse {
     id: number;
     name: string;
     is_active: boolean;
+  };
+}
+export interface DeleteProductResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: {
+    id: number;
+    name: string;
+    had_orders: boolean;
+    order_count:number;
   };
 }
 
