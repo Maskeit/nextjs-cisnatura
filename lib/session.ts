@@ -12,10 +12,10 @@ import { api } from './api';
 export function clearSession(): void {
   // Limpiar cookies de autenticación
   cookieStorage.clearAuth();
-  
+
   // Limpiar header de autorización de axios
   delete api.defaults.headers.common['Authorization'];
-  
+
   // Limpiar datos de checkout/carrito del localStorage
   if (typeof window !== 'undefined') {
     localStorage.removeItem('selected_address_id');
@@ -30,7 +30,7 @@ export function clearSession(): void {
 export function isSessionValid(): boolean {
   const token = cookieStorage.getAccessToken();
   const user = cookieStorage.getUser();
-  
+
   return !!token && !!user;
 }
 
@@ -41,36 +41,37 @@ export function isSessionValid(): boolean {
  */
 export function redirectToLogin(currentPath?: string, reason?: 'expired' | 'invalid'): void {
   if (typeof window === 'undefined') return;
-  
+
   clearSession();
-  
+
   const path = currentPath || window.location.pathname;
   let loginUrl = `/login?redirect=${encodeURIComponent(path)}`;
-  
+
   if (reason === 'expired') {
     loginUrl += '&session_expired=true';
   } else if (reason === 'invalid') {
     loginUrl += '&session_invalid=true';
   }
-  
+
   window.location.href = loginUrl;
 }
 
 /**
  * Inicializa la sesión desde las cookies
  * Configura el token de axios si existe una sesión válida
+ * 
+ * IMPORTANTE: NO limpia la sesión si no es válida.
+ * La limpieza solo debe ocurrir en logout explícito o error 401.
  */
 export function initializeSession(): boolean {
-  if (!isSessionValid()) {
-    clearSession();
-    return false;
-  }
-  
   const token = cookieStorage.getAccessToken();
+
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     return true;
   }
-  
+
+  // No hay token - simplemente retornar false sin limpiar nada
+  // Esto evita race conditions donde las cookies aún no están disponibles
   return false;
 }

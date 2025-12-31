@@ -14,7 +14,7 @@ import { ArrowBigLeftDashIcon } from "lucide-react"
 // Componente separado para manejar los searchParams
 function SessionExpiredHandler() {
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
     const sessionExpired = searchParams.get('session_expired');
     if (sessionExpired === 'true') {
@@ -57,9 +57,10 @@ function LoginContent() {
         toast.success(`¡Bienvenido, ${user.full_name}!`);
 
         // Redirigir al home o a la página solicitada
+        // Usamos window.location.href para forzar recarga completa y que el navbar detecte la sesión
         const searchParams = new URLSearchParams(window.location.search);
         const redirect = searchParams.get('redirect') || '/';
-        router.push(redirect);
+        window.location.href = redirect;
       } else {
         const errorMsg = 'Error al iniciar sesión';
         setError(errorMsg);
@@ -95,7 +96,7 @@ function LoginContent() {
     try {
       // 1. Autenticar con Firebase/Google
       const googleAuthData = await loginWithGoogle();
-      
+
       if (!googleAuthData) {
         setError('Error al iniciar sesión con Google');
         toast.error('Error al iniciar sesión con Google');
@@ -123,9 +124,10 @@ function LoginContent() {
         });
 
         // 6. Redirigir al home o a la página solicitada
+        // Usamos window.location.href para forzar recarga completa y que el navbar detecte la sesión
         const searchParams = new URLSearchParams(window.location.search);
         const redirect = searchParams.get('redirect') || '/';
-        router.push(redirect);
+        window.location.href = redirect;
       } else {
         throw new Error('Respuesta inválida del servidor');
       }

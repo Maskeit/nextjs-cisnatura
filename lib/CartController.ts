@@ -15,7 +15,6 @@ class CartController {
    */
   static getCart = async (): Promise<CartResponse> => {
     const response = await api.get("/cart");
-    console.log('Cart summary response:', response.data.data.shipping_info);
     return response.data;
   };
 
