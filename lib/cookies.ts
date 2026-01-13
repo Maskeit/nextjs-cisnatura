@@ -7,15 +7,14 @@
  * El backend ahora establece cookies HttpOnly para access_token y refresh_token.
  * Estas cookies NO son accesibles desde JavaScript (protección contra XSS).
  * 
- * - access_token: Cookie HttpOnly (establecida por backend)
+ * - access_token: Cookie legible (contiene JWT con is_admin en payload)
  * - refresh_token: Cookie HttpOnly (establecida por backend)
  * - csrf_token: Cookie NO HttpOnly (JS puede leerla para enviar en header)
  * - user_data: Cookie NO HttpOnly (para mostrar info del usuario en UI)
+ *              NO contiene is_admin/is_active (seguridad)
  * 
- * El frontend YA NO necesita guardar tokens - el backend los envía como cookies
- * y el navegador los incluye automáticamente en cada request.
- * 
- * Para APIs/fetch, usar credentials: 'include' para enviar cookies.
+ * Para obtener is_admin, se decodifica el payload del JWT (sin verificar firma,
+ * la verificación la hace el backend).
  */
 import Cookies from 'js-cookie';
 import { UserResponse } from '@/interfaces/User';
@@ -24,11 +23,6 @@ import { UserResponse } from '@/interfaces/User';
 const USER_KEY = 'user_data';
 const CSRF_TOKEN_KEY = 'csrf_token';
 
-// Cookies que NO podemos leer desde JS (HttpOnly - las maneja el backend)
-// Estas constantes son solo para referencia
-// const ACCESS_TOKEN_KEY = 'access_token';  // HttpOnly
-// const REFRESH_TOKEN_KEY = 'refresh_token'; // HttpOnly
-
 // Configuración para cookies que SÍ creamos desde JS
 const COOKIE_OPTIONS = {
   expires: 7, // días
@@ -36,6 +30,33 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax' as const,
   path: '/',
 };
+
+/**
+ * Decodifica el payload de un JWT sin verificar la firma.
+ * NOTA: Solo usar para leer datos de UI, la verificación real la hace el backend.
+ */
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // El payload es la segunda parte (base64url encoded)
+    const payload = parts[1];
+    // Convertir base64url a base64 estándar
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    // Decodificar
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding JWT payload:', error);
+    return null;
+  }
+}
 
 export const cookieStorage = {
   /**
@@ -84,17 +105,42 @@ export const cookieStorage = {
 
   /**
    * Obtener datos del usuario para mostrar en la UI.
+   * Combina datos de user_data cookie con is_admin del JWT.
    */
   getUser(): UserResponse | null {
     const userData = Cookies.get(USER_KEY);
     if (!userData) return null;
 
     try {
-      return JSON.parse(userData);
+      const user = JSON.parse(userData) as UserResponse;
+
+      // Obtener is_admin del JWT (no está en user_data por seguridad)
+      const token = Cookies.get('access_token');
+      if (token) {
+        const payload = decodeJwtPayload(token);
+        if (payload) {
+          user.is_admin = payload.is_admin || false;
+          user.is_active = true; // Si tiene token válido, está activo
+        }
+      }
+
+      return user;
     } catch (error) {
       console.error('Error parsing user data:', error);
       return null;
     }
+  },
+
+  /**
+   * Verificar si el usuario actual es administrador.
+   * Lee el claim is_admin del JWT.
+   */
+  isAdmin(): boolean {
+    const token = Cookies.get('access_token');
+    if (!token) return false;
+
+    const payload = decodeJwtPayload(token);
+    return payload?.is_admin === true;
   },
 
   /**
