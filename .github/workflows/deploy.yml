@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: VPS_HOST
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.5.0
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Empaquetar solo el build
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+          tar -czf build.tar.gz -C .next/standalone .
+
+      - name: Cisnatura CI/CD
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: build.tar.gz
+          target: /home/admin/cisnatura/incoming/
+
+      - name: Desplegar en el VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            mkdir -p /home/admin/cisnatura/incoming/build
+            tar -xzf /home/admin/cisnatura/incoming/build.tar.gz -C /home/admin/cisnatura/incoming/build/
+            rm -rf /home/admin/cisnatura/previous
+            [ -d /home/admin/cisnatura/current ] && mv /home/admin/cisnatura/current /home/admin/cisnatura/previous
+            mv /home/admin/cisnatura/incoming/build /home/admin/cisnatura/current
+            sudo systemctl restart cisnaturatienda
+            sleep 3
+            curl -sf http://localhost:3000 || (mv /home/admin/cisnatura/previous /home/admin/cisnatura/current && sudo systemctl restart cisnaturatienda && exit 1)

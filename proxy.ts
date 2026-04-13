@@ -17,6 +17,22 @@ const adminRoutes = ['/admin'];
 // Rutas solo para usuarios no autenticados
 const authRoutes = ['/login', '/register'];
 
+/**
+ * Decodifica el payload de un JWT sin verificar firma.
+ * Solo para leer claims en el middleware edge runtime.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(base64, 'base64').toString('utf-8');
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 // Helper para manejar usuarios no autenticados
 function handleUnauthenticated(request: NextRequest, pathname: string) {
   const loginUrl = new URL('/login', request.url);
@@ -48,8 +64,15 @@ export function proxy(request: NextRequest) {
       isAdmin = userData.is_admin === true;
     } catch (error) {
       console.error('Error parsing user data:', error);
-      // Si hay error parseando user data, considerarlo no autenticado
       return handleUnauthenticated(request, pathname);
+    }
+  }
+
+  // Fallback: si user_data no tiene is_admin, leerlo del JWT
+  if (!isAdmin && token) {
+    const payload = decodeJwtPayload(token);
+    if (payload) {
+      isAdmin = payload.is_admin === true;
     }
   }
   
