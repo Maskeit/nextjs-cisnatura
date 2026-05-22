@@ -31,6 +31,12 @@ export default function AdminLayout({
       description: "Gestionar productos y categorías"
     },
     {
+      title: "Protocolos",
+      href: "/admin/protocolos",
+      icon: Package,
+      description: "Gestiona los protocolos"
+    },
+    {
       title: "Órdenes",
       href: "/admin/ordenes",
       icon: ShoppingBag,

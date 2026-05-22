@@ -27,12 +27,9 @@ export default function ConfigurationPage() {
     setError(null);
 
     try {
-      console.log('📡 Fetching admin settings...');
       const data = await AdminConfigController.getSettings();
-      console.log('✅ Settings loaded:', data);
       setSettings(data);
-    } catch (err: any) {
-      console.error('❌ Error loading settings:', err);
+    } catch (err: any) {      
       setError(err.response?.data?.message || 'Error al cargar configuraciones');
     } finally {
       setIsLoading(false);
@@ -43,8 +40,7 @@ export default function ConfigurationPage() {
     setSettings(updatedSettings);
   };
 
-  if (isLoading) {
-    console.log('🔄 Loading state...');
+  if (isLoading) {    
     return (
       <div className="container mx-auto py-8 space-y-6 max-w-7xl">
         <div className="space-y-2">
@@ -56,8 +52,7 @@ export default function ConfigurationPage() {
     );
   }
 
-  if (error) {
-    console.log('⚠️ Error state:', error);
+  if (error) {    
     return (
       <div className="container mx-auto py-8 max-w-7xl">
         <Alert variant="destructive">
@@ -68,12 +63,10 @@ export default function ConfigurationPage() {
     );
   }
 
-  if (!settings) {
-    console.log('❌ No settings - returning null');
+  if (!settings) {    
     return null;
   }
-
-  console.log('✨ Rendering page with settings:', settings);
+  
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-7xl">
       <div className="space-y-2">

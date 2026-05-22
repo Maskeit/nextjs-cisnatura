@@ -48,7 +48,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import ProductController from '@/lib/ProductController';
 import { Category } from '@/interfaces/Products';
-import { cn } from "@/lib/utils";
+import { cn, generateSlug } from "@/lib/utils";
 
 const PRICE_RANGES = [
   { id: 'all', label: 'Todos los precios' },
@@ -106,15 +106,6 @@ export default function AdminProductosPage() {
     setSelectedPriceRange('all');
   };
 
-  // Auto-generar slug desde el nombre
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  };
 
   const handleNameChange = (name: string) => {
     setNewCategoryName(name);
