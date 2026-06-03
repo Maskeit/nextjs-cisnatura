@@ -36,7 +36,8 @@ export const ProtocolCard = ({ protocolo, isOwned = false }: ProtocolCardProps) 
     setIsAdding(true);
     try {
       const response = await CartController.addItem({
-        product_id: protocolo.product_id ?? protocolo.id,
+        item_type: "protocol",
+        protocol_id: protocolo.id,
         quantity: 1,
       });
       if (response.success) {
@@ -139,7 +140,7 @@ export const ProtocolCard = ({ protocolo, isOwned = false }: ProtocolCardProps) 
         ) : (
           <Button
             className="w-full h-8 md:h-10 text-xs md:text-sm"
-            disabled={isAdding || !protocolo.product_id}
+            disabled={isAdding}
             onClick={handleAddToCart}
           >
             {isAdding ? (
@@ -148,10 +149,10 @@ export const ProtocolCard = ({ protocolo, isOwned = false }: ProtocolCardProps) 
               <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             )}
             <span className="hidden sm:inline">
-              {isAdding ? "Agregando..." : protocolo.product_id ? "Agregar al carrito" : "No disponible"}
+              {isAdding ? "Agregando..." : "Agregar al carrito"}
             </span>
             <span className="sm:hidden">
-              {isAdding ? "..." : protocolo.product_id ? "Agregar" : "—"}
+              {isAdding ? "..." : "Agregar"}
             </span>
           </Button>
         )}

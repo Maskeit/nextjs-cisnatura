@@ -225,7 +225,7 @@ export const ProtocolEditDialog = ({
               </Badge>
             </div>
             <DialogDescription>
-              ID: {protocol.id} · Producto #{protocol.product_id} · {protocol.phases.length} fases
+              ID: {protocol.id} · {protocol.phases.length} fases
             </DialogDescription>
           </DialogHeader>
 

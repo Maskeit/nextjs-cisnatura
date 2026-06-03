@@ -11,13 +11,21 @@ import { toast } from 'sonner';
 
 interface CartItemProps {
   item: CartItemType;
-  onUpdate: (productId: number, quantity: number) => Promise<void>;
-  onRemove: (productId: number) => Promise<void>;
+  onUpdate: (item: CartItemType, quantity: number) => Promise<void>;
+  onRemove: (item: CartItemType) => Promise<void>;
 }
 
 export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const isProtocol = item.item_type === "protocol";
+  // Enlace según el tipo de item
+  const itemHref = isProtocol
+    ? `/protocolos/${item.product.slug}`
+    : `/productos/${item.product.slug}`;
+  // Stock disponible (los protocolos no tienen stock)
+  const stock = item.product.stock ?? Infinity;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -42,14 +50,14 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
 
   const handleIncrement = async () => {
-    if (item.quantity >= item.product.stock) {
+    if (item.quantity >= stock) {
       toast.error('No hay suficiente stock disponible');
       return;
     }
 
     setIsUpdating(true);
     try {
-      await onUpdate(item.product_id, item.quantity + 1);
+      await onUpdate(item, item.quantity + 1);
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
     } finally {
@@ -66,7 +74,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
     setIsUpdating(true);
     try {
-      await onUpdate(item.product_id, item.quantity - 1);
+      await onUpdate(item, item.quantity - 1);
     } catch (error) {
       console.error('Error al actualizar cantidad:', error);
     } finally {
@@ -77,8 +85,8 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
   const handleRemove = async () => {
     setIsRemoving(true);
     try {
-      await onRemove(item.product_id);
-      toast.success('Producto eliminado del carrito');
+      await onRemove(item);
+      toast.success(isProtocol ? 'Protocolo eliminado del carrito' : 'Producto eliminado del carrito');
     } catch (error) {
       console.error('Error al eliminar producto:', error);
       toast.error('Error al eliminar el producto');
@@ -91,7 +99,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
     <div className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
       {/* Imagen del producto */}
       <Link 
-        href={`/productos/${item.product.slug}`}
+        href={itemHref}
         className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted"
       >
         <Image
@@ -109,7 +117,7 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
         <div>
           <div className="flex items-start gap-1 md:gap-2 mb-1">
             <Link 
-              href={`/productos/${item.product.slug}`}
+              href={itemHref}
               className="font-semibold text-sm md:text-lg hover:text-primary transition-colors line-clamp-2 flex-1"
             >
               {item.product.name}
@@ -141,29 +149,33 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
         {/* Controles de cantidad - Mobile */}
         <div className="flex items-center justify-between mt-2 md:hidden">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDecrement}
-              disabled={isUpdating || isRemoving}
-              className="h-7 w-7"
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <span className="text-sm font-semibold w-6 text-center">
-              {item.quantity}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleIncrement}
-              disabled={isUpdating || isRemoving || item.quantity >= item.product.stock}
-              className="h-7 w-7"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
+          {isProtocol ? (
+            <Badge variant="secondary" className="text-[10px]">Acceso digital</Badge>
+          ) : (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDecrement}
+                disabled={isUpdating || isRemoving}
+                className="h-7 w-7"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="text-sm font-semibold w-6 text-center">
+                {item.quantity}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleIncrement}
+                disabled={isUpdating || isRemoving || item.quantity >= stock}
+                className="h-7 w-7"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
 
           <div className="text-right">
             {formattedSubtotalWithoutDiscount && (
@@ -185,29 +197,33 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
 
       {/* Controles de cantidad - Desktop */}
       <div className="hidden md:flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleDecrement}
-            disabled={isUpdating || isRemoving}
-            className="h-9 w-9"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-          <span className="text-lg font-semibold w-10 text-center">
-            {item.quantity}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleIncrement}
-            disabled={isUpdating || isRemoving || item.quantity >= item.product.stock}
-            className="h-9 w-9"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        {isProtocol ? (
+          <Badge variant="secondary" className="whitespace-nowrap">Acceso digital</Badge>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleDecrement}
+              disabled={isUpdating || isRemoving}
+              className="h-9 w-9"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="text-lg font-semibold w-10 text-center">
+              {item.quantity}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleIncrement}
+              disabled={isUpdating || isRemoving || item.quantity >= stock}
+              className="h-9 w-9"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         <div className="text-right min-w-[120px]">
           {formattedSubtotalWithoutDiscount && (

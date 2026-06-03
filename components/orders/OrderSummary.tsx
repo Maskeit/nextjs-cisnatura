@@ -225,9 +225,12 @@ export default function OrderSummary() {
                   const imageUrl = item.product.image_url
                     ? `${apiBase}${item.product.image_url}`
                     : '/placeholder.png';
+                  const itemKey = item.item_type === 'protocol' 
+                    ? `protocol-${item.protocol_id}` 
+                    : `product-${item.product_id}`;
                   
                   return (
-                    <div key={`cart-item-${item.id}`} className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
+                    <div key={itemKey} className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
                       <Link 
                         href={`/productos/${item.product.slug}`}
                         className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted"

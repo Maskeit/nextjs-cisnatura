@@ -190,17 +190,6 @@ class ProtocolController {
    * @param protocolId - ID del protocolo a eliminar
    * @returns Promise con resultado de la operación
    */
-  /**
-   * Crear productos digitales para protocolos sin product_id (migración)
-   * Ejecutar una sola vez en admin para protocolos existentes
-   */
-  static adminSyncProducts = async (): Promise<{ success: boolean; message: string; data: any }> => {
-    const response = await api.post<{ success: boolean; status_code: number; message: string; data: any }>(
-      "/protocols/admin/sync-products"
-    );
-    return { success: response.data.success, message: response.data.message, data: response.data.data };
-  };
-
   static adminDelete = async (
     protocolId: number
   ): Promise<{ success: boolean; message: string }> => {

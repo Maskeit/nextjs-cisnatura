@@ -98,14 +98,11 @@ export default function ProtocolPage() {
 
   const handleAddToCart = async () => {
     if (!protocol) return;
-    if (!protocol.product_id) {
-      toast.error("Este protocolo no tiene un producto asignado aún");
-      return;
-    }
     setIsAddingToCart(true);
     try {
       const response = await CartController.addItem({
-        product_id: protocol.product_id,
+        item_type: "protocol",
+        protocol_id: protocol.id,
         quantity: 1,
       });
       if (response.success) {
@@ -388,7 +385,7 @@ export default function ProtocolPage() {
                 <Button
                   size="lg"
                   className="w-full h-12 text-base"
-                  disabled={isAddingToCart || !protocol.product_id}
+                  disabled={isAddingToCart}
                   onClick={handleAddToCart}
                 >
                   {isAddingToCart ? (
@@ -650,7 +647,7 @@ export default function ProtocolPage() {
             <Button
               size="lg"
               className="h-12 px-10 text-base"
-              disabled={isAddingToCart || !protocol.product_id}
+              disabled={isAddingToCart}
               onClick={handleAddToCart}
             >
               {isAddingToCart ? (

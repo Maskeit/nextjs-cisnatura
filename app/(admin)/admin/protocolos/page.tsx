@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Protocols } from "@/components/admin/protocols/Protocols";
 import { ProtocolCreateDialog } from "@/components/admin/protocols/ProtocolCreate";
 import { Button } from "@/components/ui/button";
-import { Filter, Plus, Trash2, ChevronDown, Check, RefreshCw } from "lucide-react";
+import { Filter, Plus, Trash2, ChevronDown, Check } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -57,24 +57,6 @@ export default function AdminProtocolsPage() {
   >("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const handleSyncProducts = async () => {
-    setIsSyncing(true);
-    try {
-      const result = await ProtocolController.adminSyncProducts();
-      if (result.data?.synced?.length > 0) {
-        toast.success(`${result.data.synced.length} protocolo(s) sincronizados correctamente`);
-        setRefreshKey((k) => k + 1);
-      } else {
-        toast.info("Todos los protocolos ya tienen su producto vinculado");
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Error al sincronizar protocolos");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(
     undefined,
@@ -213,15 +195,6 @@ export default function AdminProtocolsPage() {
           CISnatura / <span className="font-normal">Protocolos</span>
         </h1>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleSyncProducts}
-            disabled={isSyncing}
-            title="Crear productos digitales para protocolos que no los tienen"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
-            {isSyncing ? "Sincronizando..." : "Sincronizar precios"}
-          </Button>
           <Button onClick={() => setIsCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Crear Protocolo

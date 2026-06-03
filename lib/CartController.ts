@@ -4,6 +4,7 @@ import type {
   CartSummaryResponse,
   AddToCartRequest,
   UpdateCartItemRequest,
+  CartItemType,
   ShippingInfoResponse,
   ShippingCalculationResponse,
 } from "@/interfaces/Cart";
@@ -39,26 +40,74 @@ class CartController {
 
   /**
    * Actualizar la cantidad de un item en el carrito
-   * @param productId - ID del producto en el carrito
+   * @param itemId - ID del producto o protocolo en el carrito
    * @param data - Nueva cantidad
+   * @param itemType - Tipo de item ('product' por defecto, 'protocol' para protocolos)
    * @returns Promise con el carrito actualizado
    */
   static updateItem = async (
-    productId: number,
-    data: UpdateCartItemRequest
+    itemId: number,
+    data: UpdateCartItemRequest,
+    itemType: CartItemType = "product"
   ): Promise<CartResponse> => {
-    const response = await api.put(`/cart/items/${productId}`, data);
+    const response = await api.put(`/cart/items/${itemId}`, data, {
+      params: { item_type: itemType },
+    });
     return response.data;
   };
 
   /**
-   * Eliminar un item del carrito
+   * Eliminar un item del carrito (genérico)
+   * @param itemId - ID del producto o protocolo a eliminar
+   * @param itemType - Tipo de item ('product' por defecto, 'protocol' para protocolos)
+   * @returns Promise con el carrito actualizado
+   */
+  static removeItem = async (
+    itemId: number,
+    itemType: CartItemType = "product"
+  ): Promise<CartResponse> => {
+    const response = await api.delete(`/cart/items/${itemId}`, {
+      params: { item_type: itemType },
+    });
+    return response.data;
+  };
+
+  /**
+   * Eliminar un producto del carrito
    * @param productId - ID del producto a eliminar
    * @returns Promise con el carrito actualizado
    */
-  static removeItem = async (productId: number): Promise<CartResponse> => {
-    const response = await api.delete(`/cart/items/${productId}`);
-    return response.data;
+  static removeProduct = async (productId: number): Promise<CartResponse> => {
+    return this.removeItem(productId, "product");
+  };
+
+  /**
+   * Eliminar un protocolo del carrito
+   * @param protocolId - ID del protocolo a eliminar
+   * @returns Promise con el carrito actualizado
+   */
+  static removeProtocol = async (protocolId: number): Promise<CartResponse> => {
+    return this.removeItem(protocolId, "protocol");
+  };
+
+  /**
+   * Eliminar un item del carrito por su tipo e IDs
+   * @param itemType - Tipo de item ('product' o 'protocol')
+   * @param productId - ID del producto (si itemType es 'product')
+   * @param protocolId - ID del protocolo (si itemType es 'protocol')
+   * @returns Promise con el carrito actualizado
+   */
+  static removeItemByType = async (
+    itemType: CartItemType,
+    productId?: number,
+    protocolId?: number
+  ): Promise<CartResponse> => {
+    if (itemType === 'protocol' && protocolId) {
+      return this.removeProtocol(protocolId);
+    } else if (itemType === 'product' && productId) {
+      return this.removeProduct(productId);
+    }
+    throw new Error('ID inválido para el tipo de item');
   };
 
   /**

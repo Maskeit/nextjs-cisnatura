@@ -76,10 +76,9 @@ export interface ProtocolListItem {
   estimated_duration_hours: number | null;
   is_featured: boolean;
   total_phases: number;
-  // Campos del producto vinculado
+  // Precio e imagen propios del protocolo (entidad vendible independiente)
   price: number;
   image_url: string | null;
-  product_id: number | null;
 }
 
 // ==================== PROTOCOL (full) ====================
@@ -91,7 +90,6 @@ export interface Protocol {
   long_description: string | null;
   price: number;
   image_url: string | null;
-  product_id?: number | null;
   category_id: number;
   category: ProtocolCategory;
   author: string | null;
@@ -212,7 +210,6 @@ export interface ProtocolCreate {
   long_description?: string;
   price: number;
   image_url?: string;
-  product_id?: number;
   category_id: number;
   associated_product_ids?: number[];
   author?: string;
