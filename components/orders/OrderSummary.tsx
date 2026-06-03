@@ -221,12 +221,16 @@ export default function OrderSummary() {
             <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="space-y-2 md:space-y-4">
                 {cart.items.map((item) => {
+                  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
                   const imageUrl = item.product.image_url
-                    ? `${process.env.NEXT_PUBLIC_API_URL}${item.product.image_url}`
+                    ? `${apiBase}${item.product.image_url}`
                     : '/placeholder.png';
+                  const itemKey = item.item_type === 'protocol' 
+                    ? `protocol-${item.protocol_id}` 
+                    : `product-${item.product_id}`;
                   
                   return (
-                    <div key={`cart-item-${item.id}`} className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
+                    <div key={itemKey} className="flex gap-2 md:gap-4 py-3 md:py-4 border-b last:border-b-0">
                       <Link 
                         href={`/productos/${item.product.slug}`}
                         className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted"

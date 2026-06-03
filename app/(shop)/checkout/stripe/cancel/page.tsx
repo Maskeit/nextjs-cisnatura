@@ -14,7 +14,6 @@ function StripeCancelContent() {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
-    console.log('Stripe session cancelled:', sessionId);
   }, [searchParams]);
 
   return (

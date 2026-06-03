@@ -62,9 +62,10 @@ export default function CarritoPage() {
     }
   };
 
-  const handleUpdateQuantity = async (productId: number, quantity: number) => {
+  const handleUpdateQuantity = async (item: any, quantity: number) => {
     try {
-      const response = await CartController.updateItem(productId, { quantity });
+      const itemId = item.item_type === 'protocol' ? item.protocol_id : item.product_id;
+      const response = await CartController.updateItem(itemId, { quantity }, item.item_type);
       if (response.success) {
         setCart(response.data);
         // Disparar evento para actualizar el contador del navbar
@@ -84,9 +85,13 @@ export default function CarritoPage() {
     }
   };
 
-  const handleRemoveItem = async (productId: number) => {
+  const handleRemoveItem = async (item: any) => {
     try {
-      const response = await CartController.removeItem(productId);
+      const response = await CartController.removeItemByType(
+        item.item_type,
+        item.product_id,
+        item.protocol_id
+      );
       if (response.success) {
         setCart(response.data);
         // Disparar evento para actualizar el contador del navbar
@@ -223,7 +228,7 @@ export default function CarritoPage() {
                   {cart.items.map((item) => (
                     <CartItem
                       key={`cart-item-${item.product_id}`}
-                      item={item}
+                      item={item}                      
                       onUpdate={handleUpdateQuantity}
                       onRemove={handleRemoveItem}
                     />

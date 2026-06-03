@@ -108,8 +108,9 @@ export default function ProductPage() {
   const isOutOfStock = product.stock === 0;
 
   // Construir URL de imagen de forma consistente
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const imageUrl = product.image_url
-    ? `${process.env.NEXT_PUBLIC_API_URL}${product.image_url}`
+    ? `${apiBase}${product.image_url}`
     : '/placeholder.png';
 
   const hasImage = !!product.image_url;

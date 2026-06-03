@@ -100,11 +100,6 @@ export async function loginWithGoogle(): Promise<GoogleAuthData | null> {
             isNewUser: result._tokenResponse?.isNewUser ?? false,
         };
 
-        console.log('✅ Login con Google exitoso:', {
-            uid: authData.user.uid,
-            email: authData.user.email,
-            isNewUser: authData.isNewUser
-        });
 
         return authData;
 

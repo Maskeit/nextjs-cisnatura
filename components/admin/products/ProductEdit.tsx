@@ -337,8 +337,9 @@ export const ProductEdit = ({ product, open, onOpenChange, onProductUpdated }: P
               control={form.control}
               name="image_url"
               render={({ field }) => {
+                const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");                
                 const imageUrl = field.value 
-                  ? `${process.env.NEXT_PUBLIC_API_URL}${field.value}`
+                  ? `${apiBase}${field.value}`
                   : null;
                 
                 return (

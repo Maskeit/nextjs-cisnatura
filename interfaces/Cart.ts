@@ -9,16 +9,22 @@ export interface CartProductDiscount {
   is_active: boolean;
 }
 
-// ==================== PRODUCT INFO ====================
+// ==================== ITEM TYPE ====================
+export type CartItemType = "product" | "protocol";
+
+// ==================== PRODUCT/PROTOCOL INFO ====================
+// `stock` es null para protocolos (digitales, sin inventario).
 export interface CartProduct {
   id: number;
   name: string;
   slug: string;
   price: number;
   original_price: number;
-  stock: number;
+  stock: number | null;
   image_url: string | null;
   is_active: boolean;
+  is_digital?: boolean;
+  category_id?: number | null;
   has_discount: boolean;
   discount: CartProductDiscount | null;
 }
@@ -27,9 +33,11 @@ export interface CartProduct {
 export interface CartItem {
   id?: number;
   cart_id?: number;
-  product_id: number;
+  item_type: CartItemType;
+  product_id: number | null;   // poblado si item_type === 'product'
+  protocol_id?: number | null; // poblado si item_type === 'protocol'
   quantity: number;
-  product: CartProduct;
+  product: CartProduct;        // info del producto o protocolo (forma unificada)
   subtotal: number;
   subtotal_without_discount: number;
   discount_amount: number;
@@ -107,9 +115,13 @@ export interface ShippingCalculationResponse {
 }
 
 // ==================== REQUEST BODIES ====================
+// Para productos: { product_id, quantity } (item_type por defecto 'product').
+// Para protocolos: { item_type: 'protocol', protocol_id }.
 export interface AddToCartRequest {
-  product_id: number;
-  quantity: number;
+  item_type?: CartItemType;
+  product_id?: number;
+  protocol_id?: number;
+  quantity?: number;
 }
 
 export interface UpdateCartItemRequest {
