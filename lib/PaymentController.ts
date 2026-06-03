@@ -61,6 +61,16 @@ class PaymentController {
    * Helper: Obtener métodos de pago disponibles
    * Útil para mostrar opciones en UI
    */
+  /**
+   * Recuperar una sesión de Stripe ya pagada cuya orden no se creó (admin)
+   */
+  static recoverStripeSession = async (sessionId: string): Promise<{ success: boolean; message: string; order_id: number | null }> => {
+    const response = await api.post<{ success: boolean; message: string; order_id: number | null }>(
+      `/payments/stripe/recover-session/${sessionId}`
+    );
+    return response.data;
+  };
+
   static getAvailablePaymentMethods = () => {
     return [
       {

@@ -2,7 +2,6 @@ import { api } from "./api";
 import {
   Protocol,
   ProtocolDetailed,
-  ProtocolListItem,
   ProtocolUserAccess,
   ProtocolProgress,
   ProtocolCreate,
@@ -14,6 +13,9 @@ import {
   AdminListProtocolsResponse,
   UploadProtocolFileResponse,
   ProtocolCategory,
+  ProtocolPhaseCreate,
+  ProtocolPublicListData,
+  ProtocolPublicListResponse,
 } from "@/interfaces/Protocol";
 
 class ProtocolController {
@@ -26,14 +28,30 @@ class ProtocolController {
    */
   static fetchProtocols = async (
     params: GetProtocolsParams = {}
-  ): Promise<ProtocolListItem[]> => {
+  ): Promise<ProtocolPublicListData> => {
     const queryParams: Record<string, string | number | boolean> = {};
     if (params.page !== undefined) queryParams.page = params.page;
     if (params.limit !== undefined) queryParams.limit = params.limit;
     if (params.featured_only !== undefined) queryParams.featured_only = params.featured_only;
+    if (params.category_id !== undefined) queryParams.category_id = params.category_id;
+    if (params.search !== undefined && params.search !== "") queryParams.search = params.search;
 
-    const response = await api.get<ProtocolListItem[]>("/protocols/", { params: queryParams });
-    return response.data;
+    const response = await api.get<ProtocolPublicListResponse>("/protocols/", { params: queryParams });
+    return response.data.data;
+  };
+
+  /**
+   * Listar categorías de protocolos activas (público)
+   * @returns Promise con lista de categorías
+   */
+  static fetchPublicCategories = async (): Promise<ProtocolCategory[]> => {
+    const response = await api.get<{
+      success: boolean;
+      status_code: number;
+      message: string;
+      data: { categories: ProtocolCategory[] };
+    }>("/protocols/categories");
+    return response.data.data.categories;
   };
 
   /**
@@ -168,17 +186,88 @@ class ProtocolController {
   };
 
   /**
+   * Eliminar un protocolo permanentemente (admin)
+   * @param protocolId - ID del protocolo a eliminar
+   * @returns Promise con resultado de la operación
+   */
+  /**
+   * Crear productos digitales para protocolos sin product_id (migración)
+   * Ejecutar una sola vez en admin para protocolos existentes
+   */
+  static adminSyncProducts = async (): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await api.post<{ success: boolean; status_code: number; message: string; data: any }>(
+      "/protocols/admin/sync-products"
+    );
+    return { success: response.data.success, message: response.data.message, data: response.data.data };
+  };
+
+  static adminDelete = async (
+    protocolId: number
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{
+      success: boolean;
+      status_code: number;
+      message: string;
+    }>(`/protocols/admin/${protocolId}`);
+    return { success: response.data.success, message: response.data.message };
+  };
+
+  /**
+   * Crear una nueva fase en un protocolo existente (admin)
+   * @param protocolId - ID del protocolo
+   * @param data - Datos de la fase incluyendo recursos opcionales
+   * @returns Promise con la fase creada
+   */
+  static adminCreatePhase = async (
+    protocolId: number,
+    data: ProtocolPhaseCreate
+  ): Promise<{ success: boolean; status_code: number; message: string; data: any }> => {
+    const response = await api.post<{
+      success: boolean;
+      status_code: number;
+      message: string;
+      data: any;
+    }>(`/protocols/admin/${protocolId}/phases`, data);
+    return response.data;
+  };
+
+  /**
    * Actualizar una fase de un protocolo (admin)
    * @param protocolId - ID del protocolo
    * @param phaseId - ID de la fase
    * @param data - Campos a actualizar
+   * @returns Promise con la fase actualizada
    */
   static adminUpdatePhase = async (
     protocolId: number,
     phaseId: number,
     data: ProtocolPhaseUpdate
-  ): Promise<void> => {
-    await api.put(`/protocols/admin/${protocolId}/phases/${phaseId}`, data);
+  ): Promise<{ success: boolean; status_code: number; message: string; data: any }> => {
+    const response = await api.put<{
+      success: boolean;
+      status_code: number;
+      message: string;
+      data: any;
+    }>(`/protocols/admin/${protocolId}/phases/${phaseId}`, data);
+    return response.data;
+  };
+
+  /**
+   * Eliminar una fase de un protocolo (admin)
+   * @param protocolId - ID del protocolo
+   * @param phaseId - ID de la fase a eliminar
+   * @returns Promise con resultado de la operación
+   */
+  static adminDeletePhase = async (
+    protocolId: number,
+    phaseId: number
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{
+      success: boolean;
+      status_code: number;
+      message: string;
+    }>(`/protocols/admin/${protocolId}/phases/${phaseId}`);
+    return { success: response.data.success, message: response.data.message };
   };
 
   // ==================== ADMIN CATEGORY ENDPOINTS ====================

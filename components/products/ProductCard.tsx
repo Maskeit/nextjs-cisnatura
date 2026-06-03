@@ -63,8 +63,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   // Construir URL completa de la imagen
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const imageUrl = product.image_url 
-    ? `${process.env.NEXT_PUBLIC_API_URL}${product.image_url}`
+    ? `${apiBase}${product.image_url}`
     : '/placeholder.png';
   
   const hasImage = !!product.image_url;

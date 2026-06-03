@@ -7,16 +7,16 @@ import { ProtocolListItem } from "@/interfaces/Protocol";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Loader2, BookOpen, Clock } from "lucide-react";
+import { ShoppingCart, Loader2, BookOpen, Clock, BookOpenCheck } from "lucide-react";
 import CartController from "@/lib/CartController";
-import ProtocolController from "@/lib/ProtocolController";
 import { toast } from "sonner";
 
 interface ProtocolCardProps {
   protocolo: ProtocolListItem;
+  isOwned?: boolean;
 }
 
-export const ProtocolCard = ({ protocolo }: ProtocolCardProps) => {
+export const ProtocolCard = ({ protocolo, isOwned = false }: ProtocolCardProps) => {
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
 
@@ -25,8 +25,9 @@ export const ProtocolCard = ({ protocolo }: ProtocolCardProps) => {
     currency: "MXN",
   }).format(protocolo.price);
 
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const imageUrl = protocolo.image_url
-    ? `${process.env.NEXT_PUBLIC_API_URL}${protocolo.image_url}`
+    ? `${apiBase}${protocolo.image_url}`
     : "/placeholder.png";
 
   const hasImage = !!protocolo.image_url;
@@ -35,7 +36,7 @@ export const ProtocolCard = ({ protocolo }: ProtocolCardProps) => {
     setIsAdding(true);
     try {
       const response = await CartController.addItem({
-        product_id: protocolo.id,
+        product_id: protocolo.product_id ?? protocolo.id,
         quantity: 1,
       });
       if (response.success) {
@@ -127,21 +128,33 @@ export const ProtocolCard = ({ protocolo }: ProtocolCardProps) => {
       </CardContent>
 
       <CardFooter className="pt-0 px-2 md:px-6 pb-2 md:pb-6">
-        <Button
-          className="w-full h-8 md:h-10 text-xs md:text-sm"
-          disabled={isAdding}
-          onClick={handleAddToCart}
-        >
-          {isAdding ? (
-            <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 animate-spin" />
-          ) : (
-            <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-          )}
-          <span className="hidden sm:inline">
-            {isAdding ? "Agregando..." : "Agregar al carrito"}
-          </span>
-          <span className="sm:hidden">{isAdding ? "..." : "Agregar"}</span>
-        </Button>
+        {isOwned || protocolo.price === 0 ? (
+          <Button className="w-full h-8 md:h-10 text-xs md:text-sm" variant="secondary" asChild>
+            <Link href={`/protocolos/${protocolo.slug}`}>
+              <BookOpenCheck className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Acceder al protocolo</span>
+              <span className="sm:hidden">Acceder</span>
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            className="w-full h-8 md:h-10 text-xs md:text-sm"
+            disabled={isAdding || !protocolo.product_id}
+            onClick={handleAddToCart}
+          >
+            {isAdding ? (
+              <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 animate-spin" />
+            ) : (
+              <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            )}
+            <span className="hidden sm:inline">
+              {isAdding ? "Agregando..." : protocolo.product_id ? "Agregar al carrito" : "No disponible"}
+            </span>
+            <span className="sm:hidden">
+              {isAdding ? "..." : protocolo.product_id ? "Agregar" : "—"}
+            </span>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

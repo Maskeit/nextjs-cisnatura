@@ -35,9 +35,11 @@ export default function CartItem({ item, onUpdate, onRemove }: CartItemProps) {
     ? formatCurrency(item.subtotal_without_discount)
     : null;
 
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const imageUrl = item.product.image_url
-    ? `${process.env.NEXT_PUBLIC_API_URL}${item.product.image_url}`
-    : '/placeholder.png';
+    ? `${apiBase}${item.product.image_url}`
+    : "/placeholder.png";
+
 
   const handleIncrement = async () => {
     if (item.quantity >= item.product.stock) {

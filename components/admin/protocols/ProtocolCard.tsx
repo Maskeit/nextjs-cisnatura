@@ -36,8 +36,9 @@ export default function AdminProtocolCard({ protocol, onProtocolUpdated }: Proto
     currency: "MXN",
   }).format(protocol.price);
 
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const imageUrl = protocol.image_url
-    ? `${process.env.NEXT_PUBLIC_API_URL}${protocol.image_url}`
+    ? `${apiBase}${protocol.image_url}`
     : "/placeholder.png";
 
   const hasImage = !!protocol.image_url;
@@ -134,11 +135,13 @@ export default function AdminProtocolCard({ protocol, onProtocolUpdated }: Proto
             <AlertDialogTitle className="text-destructive">
               ⚠️ ¿Eliminar protocolo?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>
-                Se eliminará <strong>&quot;{protocol.name}&quot;</strong> junto con todas sus fases y recursos.
-              </p>
-              <p className="text-destructive font-medium">Esta acción no se puede deshacer.</p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Se eliminará <strong>&quot;{protocol.name}&quot;</strong> junto con todas sus fases y recursos.
+                </p>
+                <p className="text-destructive font-medium">Esta acción no se puede deshacer.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

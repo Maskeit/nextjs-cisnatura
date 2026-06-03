@@ -34,11 +34,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, Trash2, GripVertical, X } from "lucide-react";
 import { toast } from "sonner";
-import { FileUpload } from "./FileUpload";
 import ProtocolController from "@/lib/ProtocolController";
 import AdminConfigController from "@/lib/AdminConfigController";
 import { ProtocolCreate as ProtocolCreateType } from "@/interfaces/Protocol";
 import { SimpleList } from "@/interfaces/Products";
+import { generateSlug } from "@/lib/utils"
 
 const phaseSchema = z.object({
   title: z.string().min(2, "Título requerido"),
@@ -56,7 +56,6 @@ const protocolSchema = z.object({
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
   long_description: z.string().optional(),
   price: z.number().min(0, "El precio debe ser mayor o igual a 0"),
-  product_id: z.number().int().positive("Selecciona un producto"),
   category_id: z.number().int().positive("Selecciona una categoría"),
   associated_product_ids: z.array(z.number().int()).default([]),
   author: z.string().optional(),
@@ -82,6 +81,7 @@ export const ProtocolCreateDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<SimpleList[]>([]);
   const [categories, setCategories] = useState<SimpleList[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
 
   useEffect(() => {
     if (!open) return;
@@ -89,17 +89,10 @@ export const ProtocolCreateDialog = ({
       try {
         const [productsRes, categoriesRes] = await Promise.all([
           AdminConfigController.getProductsForDrop(),
-          fetch("/api/protocols/admin/categories")
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.data?.categories) {
-                return { categories: data.data.categories };
-              }
-              throw new Error("Error al cargar categorías");
-            }),
+          ProtocolController.adminListCategories()  
         ]);
         setProducts(productsRes.products);
-        setCategories(categoriesRes.categories.map((cat: any) => ({ id: cat.id, name: cat.name })));
+        setCategories(categoriesRes.map((cat: any) => ({ id: cat.id, name: cat.name })));
       } catch (error) {
         toast.error("Error al cargar datos");
       }
@@ -115,7 +108,6 @@ export const ProtocolCreateDialog = ({
       description: "",
       long_description: "",
       price: 0,
-      product_id: undefined,
       category_id: undefined,
       associated_product_ids: [],
       author: "",
@@ -130,14 +122,6 @@ export const ProtocolCreateDialog = ({
     control: form.control,
     name: "phases",
   });
-
-  const generateSlug = (name: string) =>
-    name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
 
   const handleNameChange = (name: string) => {
     form.setValue("name", name);
@@ -166,7 +150,6 @@ export const ProtocolCreateDialog = ({
         description: values.description,
         long_description: values.long_description || undefined,
         price: values.price,
-        product_id: values.product_id,
         category_id: values.category_id,
         associated_product_ids: values.associated_product_ids,
         author: values.author || undefined,
@@ -202,7 +185,7 @@ export const ProtocolCreateDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="min-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Crear Nuevo Protocolo</DialogTitle>
           <DialogDescription>
@@ -269,43 +252,6 @@ export const ProtocolCreateDialog = ({
               )}
             />
 
-            {/* Producto principal vinculado */}
-            <FormField
-              control={form.control}
-              name="product_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Producto principal (para carrito)</FormLabel>
-                  <Select
-                    onValueChange={(v) => field.onChange(parseInt(v))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un producto" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {products.length === 0 ? (
-                        <SelectItem value="0" disabled>
-                          No hay productos disponibles
-                        </SelectItem>
-                      ) : (
-                        products.map((p) => (
-                          <SelectItem key={p.id} value={p.id.toString()}>
-                            {p.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Producto con el que se vende este protocolo en el carrito
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             {/* Categoría del protocolo */}
             <FormField
@@ -351,7 +297,6 @@ export const ProtocolCreateDialog = ({
               name="associated_product_ids"
               render={({ field }) => {
                 const selected: number[] = field.value || [];
-                const [selectedProduct, setSelectedProduct] = useState<string>("");
 
                 const addProduct = () => {
                   if (!selectedProduct) return;
@@ -497,7 +442,7 @@ export const ProtocolCreateDialog = ({
                   <FormItem>
                     <FormLabel>Autor (opcional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Dr. Juan Pérez" {...field} />
+                      <Input placeholder="Sofia Geovana" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

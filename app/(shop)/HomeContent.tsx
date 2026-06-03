@@ -15,7 +15,7 @@ import {
 import ProductController from '@/lib/ProductController'
 import { Category } from '@/interfaces/Products'
 import { toast } from "sonner"
-
+import Link from "next/link"
 const PRICE_RANGES = [
   { id: 'all', label: 'Todos los precios' },
   { id: '0-100', label: 'Menos de $100' },
@@ -130,6 +130,12 @@ export default function HomeContent() {
           </SelectContent>
         </Select>
 
+        <Button>
+          <Link href="/protocolos">
+            <span className="sm:inline">Ver Protocolos</span>
+          </Link>
+        </Button>
+
         {/* Botón limpiar filtros */}
         {(selectedCategory !== undefined || selectedPriceRange !== 'all') && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 md:h-10 text-xs md:text-sm">
@@ -138,7 +144,7 @@ export default function HomeContent() {
           </Button>
         )}
       </div>
-
+        
       {/* Productos */}
       <Products 
         selectedCategory={selectedCategory}

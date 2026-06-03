@@ -221,8 +221,9 @@ export default function OrderSummary() {
             <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="space-y-2 md:space-y-4">
                 {cart.items.map((item) => {
+                  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
                   const imageUrl = item.product.image_url
-                    ? `${process.env.NEXT_PUBLIC_API_URL}${item.product.image_url}`
+                    ? `${apiBase}${item.product.image_url}`
                     : '/placeholder.png';
                   
                   return (

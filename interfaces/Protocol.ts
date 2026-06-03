@@ -8,6 +8,14 @@ export enum ResourceType {
   DOWNLOAD = "download",
 }
 
+// ==================== ASSOCIATED PRODUCT (ref en protocolo) ====================
+export interface AssociatedProduct {
+  id: number;
+  name: string;
+  slug: string;
+  image_url: string | null;
+}
+
 // ==================== RESOURCE ====================
 export interface ProtocolResource {
   id: number;
@@ -36,6 +44,17 @@ export interface ProtocolPhase {
   updated_at: string | null;
 }
 
+export interface ProtocolPhaseCreate {
+  title: string;
+  slug: string;
+  description?: string;
+  content: string;
+  order: number;
+  duration_minutes?: number;
+  is_required?: boolean;
+  resources?: ProtocolResourceCreate[];
+}
+
 // ==================== CATEGORY ====================
 export interface ProtocolCategory {
   id: number;
@@ -53,13 +72,14 @@ export interface ProtocolListItem {
   slug: string;
   description: string;
   author: string | null;
-  category: ProtocolCategory;
+  category: ProtocolCategory | null;
   estimated_duration_hours: number | null;
   is_featured: boolean;
   total_phases: number;
   // Campos del producto vinculado
   price: number;
   image_url: string | null;
+  product_id: number | null;
 }
 
 // ==================== PROTOCOL (full) ====================
@@ -71,7 +91,7 @@ export interface Protocol {
   long_description: string | null;
   price: number;
   image_url: string | null;
-  product_id: number;
+  product_id?: number | null;
   category_id: number;
   category: ProtocolCategory;
   author: string | null;
@@ -80,6 +100,7 @@ export interface Protocol {
   is_featured: boolean;
   is_published: boolean;
   phases: ProtocolPhase[];
+  associated_products: AssociatedProduct[];
   associated_product_ids: number[];
   created_at: string;
   updated_at: string | null;
@@ -191,7 +212,7 @@ export interface ProtocolCreate {
   long_description?: string;
   price: number;
   image_url?: string;
-  product_id: number;
+  product_id?: number;
   category_id: number;
   associated_product_ids?: number[];
   author?: string;
@@ -274,6 +295,21 @@ export interface GetProtocolsParams {
   page?: number;
   limit?: number;
   featured_only?: boolean;
+  category_id?: number;
+  search?: string;
+}
+
+// ==================== PUBLIC PAGINATED RESPONSE ====================
+export interface ProtocolPublicListData {
+  protocols: ProtocolListItem[];
+  pagination: ProtocolPagination;
+}
+
+export interface ProtocolPublicListResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+  data: ProtocolPublicListData;
 }
 
 // ==================== ERRORS ====================
