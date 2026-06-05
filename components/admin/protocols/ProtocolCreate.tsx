@@ -32,13 +32,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Trash2, GripVertical, X } from "lucide-react";
+import { Loader2, Plus, Trash2, GripVertical, X, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ProtocolController from "@/lib/ProtocolController";
 import AdminConfigController from "@/lib/AdminConfigController";
-import { ProtocolCreate as ProtocolCreateType } from "@/interfaces/Protocol";
+import { ProtocolCreate as ProtocolCreateType, ResourceType } from "@/interfaces/Protocol";
 import { SimpleList } from "@/interfaces/Products";
 import { generateSlug } from "@/lib/utils"
+import { FileUpload } from "./FileUpload";
+
+const resourceSchema = z.object({
+  resource_type: z.enum(["image", "pdf", "video", "link", "download"]),
+  title: z.string().min(2, "Título requerido"),
+  description: z.string().optional(),
+  url: z.string().min(1, "URL requerida"),
+  order: z.number().int().min(0),
+  is_visible: z.boolean().default(true),
+});
 
 const phaseSchema = z.object({
   title: z.string().min(2, "Título requerido"),
@@ -48,6 +58,7 @@ const phaseSchema = z.object({
   order: z.number().int().min(0),
   duration_minutes: z.number().int().min(0).optional(),
   is_required: z.boolean().default(true),
+  resources: z.array(resourceSchema).default([]),
 });
 
 const protocolSchema = z.object({
@@ -82,6 +93,9 @@ export const ProtocolCreateDialog = ({
   const [products, setProducts] = useState<SimpleList[]>([]);
   const [categories, setCategories] = useState<SimpleList[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [fileUploadOpen, setFileUploadOpen] = useState(false);
+  const [editingPhaseIndex, setEditingPhaseIndex] = useState<number | null>(null);
+  const [pendingResourceUrl, setPendingResourceUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -138,6 +152,7 @@ export const ProtocolCreateDialog = ({
       order,
       duration_minutes: undefined,
       is_required: true,
+      resources: [],
     });
   };
 
@@ -157,9 +172,21 @@ export const ProtocolCreateDialog = ({
         estimated_duration_hours: values.estimated_duration_hours,
         is_featured: values.is_featured,
         phases: values.phases.map((p, i) => ({
-          ...p,
-          order: i,
+          title: p.title,
           slug: p.slug || generateSlug(p.title),
+          description: p.description || undefined,
+          content: p.content,
+          order: i,
+          duration_minutes: p.duration_minutes || undefined,
+          is_required: p.is_required,
+          resources: (p.resources || []).map(r => ({
+            resource_type: r.resource_type as ResourceType,
+            title: r.title,
+            description: r.description,
+            url: r.url,
+            order: r.order,
+            is_visible: r.is_visible,
+          })),
         })),
       };
       await ProtocolController.adminCreate(data);
@@ -184,6 +211,8 @@ export const ProtocolCreateDialog = ({
   };
 
   return (
+    <>
+    
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="min-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -648,6 +677,17 @@ export const ProtocolCreateDialog = ({
                       )}
                     />
                   </div>
+
+                  {/* ====== RECURSOS ====== */}
+                  <PhaseResourcesSection
+                    phaseIndex={index}
+                    form={form}
+                    onEditingPhaseChange={setEditingPhaseIndex}
+                    fileUploadOpen={fileUploadOpen}
+                    setFileUploadOpen={setFileUploadOpen}
+                    pendingResourceUrl={pendingResourceUrl}
+                    setPendingResourceUrl={setPendingResourceUrl}
+                  />
                 </div>
               ))}
             </div>
@@ -665,5 +705,218 @@ export const ProtocolCreateDialog = ({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* File Upload para recursos */}
+    <FileUpload
+      open={fileUploadOpen}
+      onOpenChange={setFileUploadOpen}
+      onFileUploaded={(url) => {
+        setPendingResourceUrl(url);
+        setFileUploadOpen(false);
+      }}
+      accept="any"
+    />
+    </>
+  );
+};
+
+// ==================== COMPONENTE: Sección de Recursos ====================
+
+interface PhaseResourcesSectionProps {
+  phaseIndex: number;
+  form: any;
+  onEditingPhaseChange: (index: number | null) => void;
+  fileUploadOpen: boolean;
+  setFileUploadOpen: (open: boolean) => void;
+  pendingResourceUrl: string | null;
+  setPendingResourceUrl: (url: string | null) => void;
+}
+
+const PhaseResourcesSection = ({
+  phaseIndex,
+  form,
+  onEditingPhaseChange,
+  fileUploadOpen,
+  setFileUploadOpen,
+  pendingResourceUrl,
+  setPendingResourceUrl,
+}: PhaseResourcesSectionProps) => {
+  const { fields: resourceFields, append: appendResource, remove: removeResource } = useFieldArray({
+    control: form.control,
+    name: `phases.${phaseIndex}.resources`,
+  });
+
+  const [newResourceTitle, setNewResourceTitle] = useState("");
+  const [newResourceDescription, setNewResourceDescription] = useState("");
+  const [newResourceType, setNewResourceType] = useState<"image" | "pdf" | "video" | "link" | "download">("pdf");
+  const [newResourceUrl, setNewResourceUrl] = useState("");
+
+  // Auto-populate URL field when a file upload completes for this phase
+  useEffect(() => {
+    if (pendingResourceUrl) {
+      setNewResourceUrl(pendingResourceUrl);
+    }
+  }, [pendingResourceUrl]);
+
+  const handleAddResource = () => {
+    const effectiveUrl = newResourceUrl || pendingResourceUrl || "";
+    if (!newResourceTitle || !effectiveUrl) {
+      toast.error("Completa al menos título y URL");
+      return;
+    }
+
+    appendResource({
+      resource_type: newResourceType,
+      title: newResourceTitle,
+      description: newResourceDescription || undefined,
+      url: effectiveUrl,
+      order: resourceFields.length,
+      is_visible: true,
+    });
+
+    setNewResourceTitle("");
+    setNewResourceDescription("");
+    setNewResourceUrl("");
+    setNewResourceType("pdf");
+    setPendingResourceUrl(null);
+  };
+
+  const handleUploadClick = () => {
+    onEditingPhaseChange(phaseIndex);
+    setFileUploadOpen(true);
+  };
+
+  return (
+    <div className="border-t pt-3 mt-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-semibold text-muted-foreground">
+          RECURSOS ({resourceFields.length})
+        </label>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleUploadClick}
+          className="h-7 text-xs"
+        >
+          <Plus className="h-3 w-3 mr-1" /> Agregar recurso
+        </Button>
+      </div>
+
+      {/* Lista de recursos existentes */}
+      {resourceFields.length > 0 && (
+        <div className="space-y-2 bg-muted/30 p-2 rounded border border-dashed">
+          {resourceFields.map((resource: any, rIndex) => (
+            <div
+              key={resource.id}
+              className="flex items-center justify-between bg-background p-2 rounded border text-xs"
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {resource.resource_type === "pdf" && (
+                  <FileText className="h-4 w-4 text-red-500 flex-shrink-0" />
+                )}
+                {resource.resource_type === "link" && (
+                  <Download className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                )}
+                {resource.resource_type === "image" && (
+                  <Download className="h-4 w-4 text-green-500 flex-shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{resource.title}</p>
+                  <p className="text-muted-foreground truncate">{resource.url}</p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-destructive flex-shrink-0"
+                onClick={() => removeResource(rIndex)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Formulario para agregar nuevo recurso */}
+      <div className="border rounded-lg p-2 bg-muted/10 space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Tipo</label>
+            <select
+              value={newResourceType}
+              onChange={(e) => setNewResourceType(e.target.value as "image" | "pdf" | "video" | "link" | "download")}
+              className="w-full border rounded px-2 py-1 text-xs"
+            >
+              <option value="pdf">PDF</option>
+              <option value="image">Imagen</option>
+              <option value="video">Video</option>
+              <option value="link">Link</option>
+              <option value="download">Descarga</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Título</label>
+            <Input
+              type="text"
+              placeholder="Mi recurso"
+              value={newResourceTitle}
+              onChange={(e) => setNewResourceTitle(e.target.value)}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium">Descripción (opcional)</label>
+          <Input
+            type="text"
+            placeholder="Descripción del recurso"
+            value={newResourceDescription}
+            onChange={(e) => setNewResourceDescription(e.target.value)}
+            className="h-8 text-xs"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium">URL</label>
+          <div className="flex gap-1">
+            <Input
+              type="text"
+              placeholder="https://ejemplo.com/archivo.pdf"
+              value={newResourceUrl}
+              onChange={(e) => setNewResourceUrl(e.target.value)}
+              className="h-8 text-xs flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleUploadClick}
+              className="h-8 text-xs px-2"
+            >
+              Subir
+            </Button>
+          </div>
+          {pendingResourceUrl && !newResourceUrl && (
+            <p className="text-xs text-green-700">
+              ✓ Archivo subido — se usará como URL
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddResource}
+          className="w-full h-8 text-xs"
+        >
+          <Plus className="h-3 w-3 mr-1" /> Agregar a fase
+        </Button>
+      </div>
+    </div>
   );
 };

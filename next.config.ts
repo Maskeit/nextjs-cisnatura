@@ -18,17 +18,33 @@ const nextConfig: NextConfig = {
         port: '8000',
         pathname: '/static/products/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/static/protocols/**',
+      },
       // Producción HTTPS
       {
         protocol: 'https',
         hostname: 'cisnaturatienda.com',
         pathname: '/static/products/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cisnaturatienda.com',
+        pathname: '/static/protocols/**',
+      },
       // Alternativa con www (si aplica)
       {
         protocol: 'https',
         hostname: 'www.cisnaturatienda.com',
         pathname: '/static/products/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.cisnaturatienda.com',
+        pathname: '/static/protocols/**',
       },
       // Google User Profile Images
       {

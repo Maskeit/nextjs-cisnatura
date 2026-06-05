@@ -241,6 +241,7 @@ export interface ProtocolPhaseUpdate {
   duration_minutes?: number;
   is_required?: boolean;
   order?: number;
+  resources?: ProtocolResourceCreate[];
 }
 
 export interface ProtocolProgressUpdate {

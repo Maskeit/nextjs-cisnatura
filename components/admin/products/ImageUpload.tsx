@@ -140,9 +140,10 @@ export const ImageUpload = ({
     setSelectedFile(null);
   };
 
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
   const displayImageUrl = currentImageUrl
-    ? `${process.env.NEXT_PUBLIC_API_URL}${currentImageUrl}`
-    : null;
+    ? `${apiBase}${currentImageUrl}`
+    : "/placeholder.png";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

@@ -31,6 +31,8 @@ import {
   Sparkles,
   Check,
 } from "lucide-react";
+
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +49,7 @@ export default function ProtocolPage() {
   const [openPhases, setOpenPhases] = useState<Set<number>>(new Set());
   const [completedOrders, setCompletedOrders] = useState<Set<number>>(new Set());
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (slug && !isAuthLoading) {
@@ -189,9 +192,13 @@ export default function ProtocolPage() {
   }).format(protocol.price);
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-  const imageUrl = protocol.image_url
-    ? `${apiBase}${protocol.image_url}`
-    : "/placeholder.png";
+
+  const buildImageUrl = (url: string | null | undefined): string => {
+    if (!url) return "/placeholder.png";
+    return url.startsWith("http") ? url : `${apiBase}${url}`;
+  };
+
+  const imageUrl = buildImageUrl(protocol.image_url);
 
   const resourceIcon: Record<string, React.ReactNode> = {
     image: <ImageIcon className="h-4 w-4" />,
@@ -202,9 +209,9 @@ export default function ProtocolPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Nav */}
-      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6">
+      <div className="w-full mx-auto px-4 md:px-6 pt-6">
         <Link href="/protocolos">
           <Button variant="ghost" size="sm" className="text-muted-foreground -ml-2">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -214,7 +221,7 @@ export default function ProtocolPage() {
       </div>
 
       {/* ─── CABECERA / HERO ──────────────────────────────── */}
-      <header className="max-w-5xl mx-auto px-4 md:px-6 mt-8 mb-10">
+      <header className="w-full mx-auto px-4 md:px-6 mt-8 mb-10">
         {/* Categoría + badges */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
           {protocol.category && (
@@ -402,7 +409,7 @@ export default function ProtocolPage() {
       </div>
 
       {/* ─── CUERPO DEL ARTÍCULO ──────────────────────────── */}
-      <main className="max-w-4xl mx-auto px-4 md:px-6 pb-24 space-y-14">
+      <main className="w-full mx-auto px-4 md:px-6 pb-24 space-y-14">
 
         {/* Descripción larga */}
         {protocol.long_description && (
@@ -589,31 +596,54 @@ export default function ProtocolPage() {
                           <div className="grid sm:grid-cols-2 gap-2">
                             {phase.resources
                               .filter((r) => r.is_visible)
-                              .map((resource) => (
-                                <a
-                                  key={resource.id}
-                                  href={resource.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/60 transition-colors group"
-                                >
-                                  <span className="text-primary group-hover:scale-110 transition-transform">
-                                    {resourceIcon[resource.resource_type] ?? (
-                                      <FileText className="h-4 w-4" />
+                              .map((resource) => {
+                                const isImage = resource.resource_type === "image";
+                                const Wrapper = isImage ? "div" : "a";
+                                const wrapperProps = isImage ? {} : {
+                                  href: resource.url,
+                                  target: "_blank",
+                                  rel: "noopener noreferrer",
+                                };
+
+                                return (
+                                  <Wrapper
+                                    key={resource.id}
+                                    {...wrapperProps}
+                                    className="flex flex-col gap-3 p-3 rounded-lg border hover:bg-muted/60 transition-colors group"
+                                  >
+                                    {isImage ? (
+                                      <button
+                                        onClick={() => setSelectedImage(buildImageUrl(resource.url))}
+                                        className="w-full h-48 relative rounded-lg overflow-hidden hover:opacity-80 transition-opacity cursor-pointer"
+                                      >
+                                        <Image
+                                          src={buildImageUrl(resource.url)}
+                                          alt={resource.title}
+                                          fill
+                                          className="object-cover"
+                                          unoptimized
+                                        />
+                                      </button>
+                                    ) : (
+                                      <span className="text-primary ">
+                                        {resourceIcon[resource.resource_type] ?? (
+                                          <FileText className="h-4 w-4" />
+                                        )}
+                                      </span>
                                     )}
-                                  </span>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">
-                                      {resource.title}
-                                    </p>
-                                    {resource.description && (
-                                      <p className="text-xs text-muted-foreground truncate">
-                                        {resource.description}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {resource.title}
                                       </p>
-                                    )}
-                                  </div>
-                                </a>
-                              ))}
+                                      {resource.description && (
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          {resource.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </Wrapper>
+                                );
+                              })}
                           </div>
                         </div>
                       )}
@@ -660,6 +690,43 @@ export default function ProtocolPage() {
           </section>
         )}
       </main>
+
+      {/* Dialog para ver imagen completa */}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-0">
+          <div className="relative w-full h-[80vh] flex items-center justify-center ">
+          <DialogTitle></DialogTitle>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen ampliada"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            )}
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              aria-label="Cerrar"
+            >
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
