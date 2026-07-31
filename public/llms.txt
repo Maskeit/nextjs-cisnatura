@@ -1,0 +1,48 @@
+# llms.txt for cisnaturatienda.com
+# Information for AI models and language model crawlers
+
+User-Agent: *
+
+# Site information
+Title: Cisnatura Tienda
+Description: E-commerce de productos naturales de alta calidad
+Language: es
+URL: https://cisnaturatienda.com/
+
+# Allowed paths for AI indexing
+Allow-User-Agents: GPTBot, CCBot, anthropic-ai, Claude-Web, Googlebot, Bingbot, OAI-SearchBot, PerplexityBot
+
+# Crawlable sections
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+# Disallowed sections (private, authentication-required)
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /carrito/
+Disallow: /perfil/
+Disallow: /login/
+Disallow: /api/auth/
+Disallow: /api/users/
+Disallow: /api/orders/
+
+# API endpoints
+# Public API
+Allow: /api/products/
+
+# Rate limiting
+Crawl-Delay: 1
+Request-Rate: 30 requests per minute
+
+# Contact information
+Contact: https://cisnaturatienda.com/
+
+# Content type information
+Content-Type: e-commerce
+
+# Last updated
+Last-Modified: 2026-07-30
+
+# Requested information fields
+Requested-Fields: title, description, price, availability, category, image_url

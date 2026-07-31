@@ -1,0 +1,54 @@
+# robots.txt for cisnaturatienda.com
+# E-commerce de productos naturales
+
+# Allow all bots by default
+User-agent: *
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /carrito/
+Disallow: /perfil/
+Disallow: /login/
+Disallow: /_next/
+Disallow: /api/auth/
+Disallow: /api/users/
+Disallow: /api/orders/
+Crawl-delay: 1
+
+# Allow AI bots explicitly
+User-agent: GPTBot
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+User-agent: CCBot
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+User-agent: anthropic-ai
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+User-agent: Claude-Web
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+# Google
+User-agent: Googlebot
+Allow: /
+Allow: /api/products/
+Allow: /protocolos/
+
+# Sitemap reference (agregar cuando tengas sitemap.xml)
+# Sitemap: https://cisnaturatienda.com/sitemap.xml
