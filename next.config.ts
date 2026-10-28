@@ -1,8 +1,19 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+// Next infiere la raíz del proyecto buscando el lockfile más cercano hacia arriba.
+// En el servidor existe /home/admin/pnpm-lock.yaml, así que tomaba /home/admin como
+// raíz y el build standalone quedaba anidado en
+// .next/standalone/actions-runner/_work/.../server.js. Fijar la raíz aquí deja
+// server.js y .next/ directamente en .next/standalone/.
+const projectRoot = path.join(__dirname);
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  outputFileTracingRoot: projectRoot,
+  // Turbopack (build por defecto en Next 16) debe usar la misma raíz.
+  turbopack: { root: projectRoot },
   
   // Optimizaciones para producción
   compress: true,
