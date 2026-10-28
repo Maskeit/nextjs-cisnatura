@@ -47,11 +47,11 @@ export default function SearchBar({
         placeholder={placeholder}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className={`w-full pl-4 ${searchQuery ? 'pr-20' : 'pr-14'} ${inputClassName}`}
+        className={`w-full pl-4 ${searchQuery ? 'pr-20' : 'pr-14'} [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:appearance-none ${inputClassName}`}
         aria-label="Buscar en el sitio"
       />
       
-      {/* Botón para limpiar */}
+      {/* Botón para limpiar (el nativo del input type="search" está oculto arriba) */}
       {searchQuery && (
         <Button
           type="button"
@@ -69,7 +69,7 @@ export default function SearchBar({
       <Button
         type="submit"
         size="icon"
-        className={`absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-light ${isMobile ? 'h-8 w-8' : 'h-9 w-9'}`}
+        className={`absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary),black_18%)] active:bg-[color-mix(in_oklab,var(--primary),black_28%)] ${isMobile ? 'h-8 w-8' : 'h-9 w-9'}`}
         aria-label="Buscar"
       >
         <Search className={isMobile ? 'h-4 w-4' : 'h-5 w-5'} />

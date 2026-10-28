@@ -1,15 +1,9 @@
-import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/components/SessionProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
-
-export const metadata: Metadata = {
-  title: "Cisnatura - Productos Naturales",
-  description: "Tienda de productos naturales, herbolaria y homeopatía",
-};
 
 export default function ShopLayout({
   children,

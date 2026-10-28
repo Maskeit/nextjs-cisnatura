@@ -1,122 +1,109 @@
-"use client";
-
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Product } from '@/interfaces/Products';
-import ProductController from '@/lib/ProductController';
-import CartController from '@/lib/CartController';
+import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import AddToCartButton from '@/components/products/AddToCartButton';
+import { SITE_URL } from '@/lib/seo';
+import { serverApi } from '@/lib/server-api';
 
-export default function ProductPage() {
-  const params = useParams();
-  const router = useRouter();
-  const slug = params.slug as string;
-  
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+interface ProductPageProps {
+  params: Promise<{ slug: string }>;
+}
 
-  useEffect(() => {
-    if (slug) {
-      fetchProduct();
-    }
-  }, [slug]);
+const apiBase = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
-  const fetchProduct = async () => {
-    setIsLoading(true);
-    try {
-      // Obtener el producto por slug usando el endpoint correcto
-      const response = await ProductController.getProductBySlug(slug);
-      
-      if (response.success && response.data) {
-        setProduct(response.data);
-      } else {
-        toast.error('Producto no encontrado');
-        router.push('/');
-      }
-    } catch (error) {
-      console.error('Error al cargar producto:', error);
-      toast.error('Error al cargar el producto');
-      router.push('/');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const formatMXN = (value: number) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
 
-  const handleAddToCart = async () => {
-    if (!product) return;
-    
-    setIsAddingToCart(true);
-    try {
-      const response = await CartController.addItem({
-        product_id: product.id,
-        quantity: quantity,
-      });
-      
-      if (response.success) {
-        toast.success(`${quantity} ${quantity === 1 ? 'unidad agregada' : 'unidades agregadas'} al carrito`);
-        // Disparar evento para actualizar el contador del navbar
-        window.dispatchEvent(new Event('cartUpdated'));
-        // Resetear cantidad
-        setQuantity(1);
-      }
-    } catch (error: any) {
-      console.error('Error al agregar al carrito:', error);
-      
-      // Si es 401, redirigir a login
-      if (error.response?.status === 401) {
-        toast.error('Debes iniciar sesión para agregar productos al carrito');
-        router.push('/login');
-      } else if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Error al agregar el producto al carrito');
-      }
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
+// Una sola línea y máximo ~160 caracteres, que es lo que muestran los buscadores.
+function toMetaDescription(text: string | null, fallback: string): string {
+  const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!clean) return fallback;
+  return clean.length > 160 ? `${clean.slice(0, 157).trimEnd()}...` : clean;
+}
 
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= (product?.stock || 0)) {
-      setQuantity(newQuantity);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+// generateMetadata y la página piden el mismo producto: fetch deduplica la
+// llamada dentro de la misma petición.
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await serverApi.productBySlug(slug);
 
   if (!product) {
-    return null;
+    return { title: 'Producto no encontrado', robots: { index: false } };
   }
 
-  const formattedPrice = new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(product.price);
+  const url = `${SITE_URL}/productos/${encodeURIComponent(product.slug)}`;
+  const description = toMetaDescription(
+    product.description,
+    `Compra ${product.name} en Cisnatura, tienda de productos naturales.`,
+  );
+  const images = product.image_url ? [`${apiBase}${product.image_url}`] : undefined;
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title: product.name,
+      description,
+      siteName: 'Cisnatura',
+      locale: 'es_MX',
+      images,
+    },
+    twitter: {
+      card: images ? 'summary_large_image' : 'summary',
+      title: product.name,
+      description,
+      images,
+    },
+  };
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
+  const product = await serverApi.productBySlug(slug);
+
+  if (!product) notFound();
 
   const isOutOfStock = product.stock === 0;
-
-  // Construir URL de imagen de forma consistente
-  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-  const imageUrl = product.image_url
-    ? `${apiBase}${product.image_url}`
-    : '/placeholder.png';
-
   const hasImage = !!product.image_url;
+  const imageUrl = hasImage ? `${apiBase}${product.image_url}` : '/placeholder.png';
+  const url = `${SITE_URL}/productos/${encodeURIComponent(product.slug)}`;
+
+  // Datos estructurados para resultados enriquecidos (precio y disponibilidad).
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description ?? undefined,
+    sku: product.slug,
+    image: hasImage ? [imageUrl] : undefined,
+    url,
+    offers: {
+      '@type': 'Offer',
+      url,
+      priceCurrency: 'MXN',
+      price: product.price,
+      availability: isOutOfStock
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+    },
+  };
 
   return (
     <div className="min-h-screen px-6 py-8">
+      {/* '<' escapado para que el contenido del producto no pueda cerrar el script */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+        }}
+      />
+
       {/* Breadcrumb y botón de regreso */}
       <div className="mb-6">
         <Link href="/">
@@ -139,7 +126,6 @@ export default function ProductPage() {
             sizes="(max-width: 768px) 100vw, 50vw"
             unoptimized={hasImage}
             priority
-            key={product.image_url || 'placeholder'}
           />
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -163,7 +149,7 @@ export default function ProductPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               {product.name}
             </h1>
-            
+
             {/* Stock badge */}
             <div>
               {isOutOfStock ? (
@@ -188,13 +174,10 @@ export default function ProductPage() {
               <div className="space-y-3">
                 <div className="flex items-baseline gap-3">
                   <span className="text-5xl font-bold text-primary">
-                    {formattedPrice}
+                    {formatMXN(product.price)}
                   </span>
                   <span className="text-3xl text-muted-foreground line-through">
-                    {new Intl.NumberFormat('es-MX', {
-                      style: 'currency',
-                      currency: 'MXN',
-                    }).format(product.discount.original_price)}
+                    {formatMXN(product.discount.original_price)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -202,17 +185,14 @@ export default function ProductPage() {
                     🎉 {product.discount.discount_name}
                   </span>
                   <span className="text-base text-muted-foreground">
-                    (Ahorras {new Intl.NumberFormat('es-MX', {
-                      style: 'currency',
-                      currency: 'MXN',
-                    }).format(product.discount.savings)})
+                    (Ahorras {formatMXN(product.discount.savings)})
                   </span>
                 </div>
               </div>
             ) : (
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold text-primary">
-                  {formattedPrice}
+                  {formatMXN(product.price)}
                 </span>
                 <span className="text-xl text-muted-foreground">MXN</span>
               </div>
@@ -229,57 +209,8 @@ export default function ProductPage() {
             </p>
           </div>
 
-          {/* Selector de cantidad */}
-          {!isOutOfStock && (
-            <div>
-              <label className="text-lg font-medium text-foreground mb-3 block">
-                Cantidad
-              </label>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  disabled={quantity <= 1}
-                  className="h-12 w-12"
-                >
-                  -
-                </Button>
-                <span className="text-2xl font-semibold w-16 text-center">
-                  {quantity}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                  disabled={quantity >= product.stock}
-                  className="h-12 w-12"
-                >
-                  +
-                </Button>
-                <span className="text-sm text-muted-foreground ml-4">
-                  {product.stock} disponibles
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Botón de agregar al carrito */}
-          <div className="pt-4">
-            <Button
-              size="lg"
-              disabled={isOutOfStock || isAddingToCart}
-              onClick={handleAddToCart}
-              className="w-full h-16 text-xl"
-            >
-              {isAddingToCart ? (
-                <Loader2 className="h-6 w-6 mr-3 animate-spin" />
-              ) : (
-                <ShoppingCart className="h-6 w-6 mr-3" />
-              )}
-              {isOutOfStock ? 'No disponible' : isAddingToCart ? 'Agregando...' : 'Agregar al carrito'}
-            </Button>
-          </div>
+          {/* Cantidad y botón de carrito (interactivo, solo esta parte hidrata) */}
+          <AddToCartButton productId={product.id} stock={product.stock} />
 
           {/* Información adicional */}
           <div className="border-t pt-6 space-y-4">

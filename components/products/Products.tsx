@@ -1,129 +1,47 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import ProductCard from './ProductCard';
-import { Product } from '@/interfaces/Products';
-import ProductController from '@/lib/ProductController';
+import { Product, Pagination as PaginationData } from '@/interfaces/Products';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from '@/components/ui/pagination';
+import { CatalogFilters, buildCatalogHref } from '@/lib/catalog-filters';
+import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductsProps {
-  selectedCategory?: number;
-  selectedPriceRange?: string;
-  searchQuery?: string;
-  onCategoryChange: (categoryId: number | undefined) => void;
-  onPriceRangeChange: (rangeId: string) => void;
-  onClearFilters: () => void;
+  products: Product[];
+  pagination: PaginationData;
+  // Filtros activos: se conservan al construir los enlaces de paginación.
+  filters: CatalogFilters;
 }
 
-export const Products = ({
-  selectedCategory,
-  selectedPriceRange = 'all',
-  searchQuery = '',
-}: ProductsProps) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+// Números de página a mostrar, con 'ellipsis' en los saltos.
+function getPageNumbers(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
+  const maxVisible = 5;
+  const pages: (number | 'ellipsis')[] = [];
 
-  const fetchProducts = async (page: number) => {
-    setIsLoading(true);
-    try {
-      // Obtener min/max del rango de precios
-      let minPrice: number | undefined;
-      let maxPrice: number | undefined;
-
-      if (selectedPriceRange === '0-100') {
-        minPrice = 0;
-        maxPrice = 100;
-      } else if (selectedPriceRange === '100-300') {
-        minPrice = 100;
-        maxPrice = 300;
-      } else if (selectedPriceRange === '300-500') {
-        minPrice = 300;
-        maxPrice = 500;
-      } else if (selectedPriceRange === '500+') {
-        minPrice = 500;
-        maxPrice = undefined;
-      }
-
-      const response = await ProductController.fetchProducts({
-        page,
-        limit: 20,
-        category_id: selectedCategory,
-        min_price: minPrice,
-        max_price: maxPrice,
-        search: searchQuery || undefined,
-      });
-
-      setProducts(response.data.products);
-      setTotalPages(response.data.pagination.total_pages);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts(currentPage);
-  }, [currentPage, selectedCategory, selectedPriceRange, searchQuery]);
-
-  useEffect(() => {
-    fetchProducts(currentPage);
-  }, [currentPage, selectedCategory, selectedPriceRange, searchQuery]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Generar números de página para mostrar
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('ellipsis');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('ellipsis');
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('ellipsis');
-        pages.push(currentPage - 1);
-        pages.push(currentPage);
-        pages.push(currentPage + 1);
-        pages.push('ellipsis');
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else if (currentPage <= 3) {
+    for (let i = 1; i <= 4; i++) pages.push(i);
+    pages.push('ellipsis', totalPages);
+  } else if (currentPage >= totalPages - 2) {
+    pages.push(1, 'ellipsis');
+    for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages);
   }
+
+  return pages;
+}
+
+export const Products = ({ products, pagination, filters }: ProductsProps) => {
+  const { page: currentPage, total_pages: totalPages } = pagination;
+  const pageHref = (page: number) => buildCatalogHref({ ...filters, page });
 
   if (products.length === 0) {
     return (
@@ -133,72 +51,82 @@ export const Products = ({
     );
   }
 
-  // Dividir productos en grupos de 10 para móvil
-  const firstTenProducts = products.slice(0, 10);
-  const secondTenProducts = products.slice(10, 20);
-
   return (
     <div className="space-y-6">
-      {/* Vista móvil - Dos columnas */}
-      <div className="md:hidden space-y-6 columns-2">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />)
-        )}
-      </div>
-
-      {/* Vista desktop - Grid tradicional */}
-      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+      {/* Un solo grid responsivo: renderizar dos (móvil y desktop) duplicaría
+          cada producto en el HTML que ve el buscador. */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
-      {/* Paginación */}
+      {/* Paginación: enlaces reales, rastreables y con URL propia por página */}
       {totalPages > 1 && (
         <Pagination>
           <PaginationContent>
-            {/* Botón Anterior */}
             <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage > 1) handlePageChange(currentPage - 1);
-                }}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-              />
+              {currentPage > 1 ? (
+                <Link
+                  href={pageHref(currentPage - 1)}
+                  rel="prev"
+                  aria-label="Página anterior"
+                  className={cn(buttonVariants({ variant: 'ghost' }), 'gap-1 px-2.5 sm:pl-2.5')}
+                >
+                  <ChevronLeft />
+                  <span className="hidden sm:block">Anterior</span>
+                </Link>
+              ) : (
+                <span
+                  aria-disabled="true"
+                  className={cn(buttonVariants({ variant: 'ghost' }), 'gap-1 px-2.5 sm:pl-2.5 pointer-events-none opacity-50')}
+                >
+                  <ChevronLeft />
+                  <span className="hidden sm:block">Anterior</span>
+                </span>
+              )}
             </PaginationItem>
 
-            {/* Números de página */}
-            {getPageNumbers().map((page, index) => (
+            {getPageNumbers(currentPage, totalPages).map((page, index) => (
               <PaginationItem key={index}>
                 {page === 'ellipsis' ? (
                   <PaginationEllipsis />
                 ) : (
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(page as number);
-                    }}
-                    isActive={currentPage === page}
+                  <Link
+                    href={pageHref(page)}
+                    aria-label={`Ir a la página ${page}`}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                    className={buttonVariants({
+                      variant: currentPage === page ? 'outline' : 'ghost',
+                      size: 'icon',
+                    })}
                   >
                     {page}
-                  </PaginationLink>
+                  </Link>
                 )}
               </PaginationItem>
             ))}
 
-            {/* Botón Siguiente */}
             <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                }}
-                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-              />
+              {currentPage < totalPages ? (
+                <Link
+                  href={pageHref(currentPage + 1)}
+                  rel="next"
+                  aria-label="Página siguiente"
+                  className={cn(buttonVariants({ variant: 'ghost' }), 'gap-1 px-2.5 sm:pr-2.5')}
+                >
+                  <span className="hidden sm:block">Siguiente</span>
+                  <ChevronRight />
+                </Link>
+              ) : (
+                <span
+                  aria-disabled="true"
+                  className={cn(buttonVariants({ variant: 'ghost' }), 'gap-1 px-2.5 sm:pr-2.5 pointer-events-none opacity-50')}
+                >
+                  <span className="hidden sm:block">Siguiente</span>
+                  <ChevronRight />
+                </span>
+              )}
             </PaginationItem>
           </PaginationContent>
         </Pagination>
@@ -210,4 +138,4 @@ export const Products = ({
       </div>
     </div>
   );
-}
+};

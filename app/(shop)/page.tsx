@@ -1,39 +1,84 @@
-import { Suspense } from "react"
-import HomeContent from "./HomeContent"
-import { Filter } from "lucide-react"
+import type { Metadata } from "next"
 
-function HomeFallback() {
-  return (
-    <div className="flex flex-col min-h-screen px-6 pt-8">
-      {/* Título skeleton */}
-      <div className="w-full py-6">
-        <div className="h-8 w-96 bg-muted animate-pulse rounded-md" />
-      </div>
+import ProductFilters from "@/components/products/ProductFilters"
+import { Products } from "@/components/products/Products"
+import {
+  CATALOG_PAGE_SIZE,
+  RawSearchParams,
+  buildCatalogHref,
+  hasActiveFilters,
+  parseCatalogFilters,
+  toApiFilters,
+} from "@/lib/catalog-filters"
+import { serverApi } from "@/lib/server-api"
 
-      {/* Barra de filtros skeleton */}
-      <div className="flex flex-wrap items-center gap-3 pb-4 border-b mb-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Filter className="h-4 w-4" />
-          <span className="font-medium">Filtrar por:</span>
-        </div>
-        <div className="h-10 w-[200px] bg-muted animate-pulse rounded-md" />
-        <div className="h-10 w-[200px] bg-muted animate-pulse rounded-md" />
-      </div>
-
-      {/* Productos skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="h-96 bg-muted animate-pulse rounded-lg" />
-        ))}
-      </div>
-    </div>
-  )
+interface HomeProps {
+  searchParams: Promise<RawSearchParams>
 }
 
-export default function Home() {
+const TITLE = "Cisnatura - Productos Naturales"
+const DESCRIPTION =
+  "Tienda en línea de productos naturales, herbolaria y homeopatía. Compra y recibe en tu domicilio."
+
+export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
+  const filters = parseCatalogFilters(await searchParams)
+  const filtered = hasActiveFilters(filters)
+
+  // Búsquedas y filtros son combinaciones casi infinitas del mismo catálogo:
+  // no se indexan y apuntan a la home. La paginación sí tiene URL canónica propia.
+  const canonical = filtered ? "/" : buildCatalogHref({ page: filters.page })
+  const title = filters.page > 1 && !filtered ? `${TITLE} - Página ${filters.page}` : TITLE
+
+  return {
+    title: { absolute: title },
+    description: DESCRIPTION,
+    alternates: { canonical },
+    robots: filtered ? { index: false, follow: true } : undefined,
+    openGraph: {
+      type: "website",
+      url: canonical,
+      title,
+      description: DESCRIPTION,
+      siteName: "Cisnatura",
+      locale: "es_MX",
+    },
+    twitter: { card: "summary", title, description: DESCRIPTION },
+  }
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const filters = parseCatalogFilters(await searchParams)
+
+  // Si la API de categorías falla, la página sigue funcionando sin ese filtro.
+  // Si falla la de productos, el error lo atrapa app/(shop)/error.tsx.
+  const [{ items, pagination }, categories] = await Promise.all([
+    serverApi.productsPage(filters.page, CATALOG_PAGE_SIZE, toApiFilters(filters)),
+    serverApi.categories().catch((error) => {
+      console.error("home: no se pudieron cargar las categorías", error)
+      return []
+    }),
+  ])
+
   return (
-    <Suspense fallback={<HomeFallback />}>
-      <HomeContent />
-    </Suspense>
+    <div className="flex flex-col min-h-screen px-3 md:px-6 pt-4 md:pt-8">
+      {/* Título de sección */}
+      <div className="w-full py-3 md:py-6">
+        <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-zinc-400">
+          CISnatura /{" "}
+          <span className="font-normal">
+            {filters.q ? `Resultados para "${filters.q}"` : "Todos los productos"}
+          </span>
+        </h1>
+      </div>
+
+      <ProductFilters
+        categories={categories}
+        searchQuery={filters.q}
+        selectedCategory={filters.category}
+        selectedPriceRange={filters.price}
+      />
+
+      <Products products={items} pagination={pagination} filters={filters} />
+    </div>
   )
 }
