@@ -1,46 +1,45 @@
-name: Deploy
+name: Build frontend image
 
 on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  deploy:
-    runs-on: self-hosted
-    environment: VPS_HOST
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: VPS_HOST   # descomenta si los secrets están en ese environment
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          version: latest
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
+      - name: Build and push
+        uses: docker/build-push-action@v6
         with:
-          node-version: 24.5.0
-          cache: pnpm
+          context: .
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          tags: |
+            ghcr.io/maskeit/cisnatura-frontend:latest
+            ghcr.io/maskeit/cisnatura-frontend:${{ github.sha }}
 
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NODE_ENV: production
-        run: pnpm build
-
-      - name: Desplegar
+      - name: Health check
         run: |
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
-          rm -rf /home/admin/cisnatura/previous
-          [ -d /home/admin/cisnatura/current ] && mv /home/admin/cisnatura/current /home/admin/cisnatura/previous
-          cp -r .next/standalone /home/admin/cisnatura/current
-          sudo systemctl restart cisnaturatienda
-          sleep 3
-          curl -sf http://localhost:3000 || (mv /home/admin/cisnatura/previous /home/admin/cisnatura/current && sudo systemctl restart cisnaturatienda && exit 1)
+          sleep 60
+          curl -sf https://cisnaturatienda.com > /dev/null
